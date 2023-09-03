@@ -8,7 +8,8 @@
 #include "VulkanCommandBuffer.h"
 #include "VulkanDevice.h"
 #include "VulkanPipeline.h"
-#include <spirv_cross.hpp>
+#include <spirv_cross/spirv_cross.hpp>
+
 
 namespace maple
 {

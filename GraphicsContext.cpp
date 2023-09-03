@@ -20,6 +20,7 @@
 #	include "Vulkan/VulkanVertexBuffer.h"
 #	include "Vulkan/VulkanStorageBuffer.h"
 #	include "Vulkan/Raytracing/VulkanRaytracingPipeline.h"
+#	include "Vulkan/VKImGuiRenderer.h"
 #endif        // MAPLE_VULKAN
 
 #ifdef MAPLE_OPENGL
@@ -350,12 +351,12 @@ namespace maple
 #endif
 	}
 
-	auto VertexBuffer::createRaw(const BufferUsage& usage )->VertexBuffer* 
+	auto VertexBuffer::createRaw(const BufferUsage& usage)->VertexBuffer*
 	{
-		return new VulkanVertexBuffer (usage);
+		return new VulkanVertexBuffer(usage);
 	}
 
-	auto VertexBuffer::createRaw(const void* data, uint32_t size, bool gpuOnly )->VertexBuffer* 
+	auto VertexBuffer::createRaw(const void* data, uint32_t size, bool gpuOnly)->VertexBuffer*
 	{
 		return new VulkanVertexBuffer(data, size, gpuOnly);
 	}
@@ -388,5 +389,10 @@ namespace maple
 #ifdef MAPLE_OPENGL
 		return std::make_shared<GLStorageBuffer>(size, data);
 #endif
+	}
+
+	auto ImGuiRenderer::create(uint32_t width, uint32_t height, bool clearScreen)->std::shared_ptr<ImGuiRenderer> 
+	{
+		return std::make_shared<VKImGuiRenderer>(width,height,clearScreen);
 	}
 }        // namespace maple
