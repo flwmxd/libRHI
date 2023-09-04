@@ -60,5 +60,6 @@ namespace maple
 		uint32_t    size  = 0;
 		BufferUsage usage;
 		bool        mappedBuffer = false;
+		VkIndexType indexType;
 	};
 };        // namespace maple

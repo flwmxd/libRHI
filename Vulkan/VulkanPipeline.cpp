@@ -99,11 +99,11 @@ namespace maple
 			ms.minSampleShading = 0.0;
 		}
 
-		inline auto createVertexLayout(VkVertexInputBindingDescription& vertexBindingDescription, VkPipelineVertexInputStateCreateInfo& vi, std::shared_ptr<VulkanShader> vkShader) -> void
+		inline auto createVertexLayout(uint32_t vertexStride, VkVertexInputBindingDescription& vertexBindingDescription, VkPipelineVertexInputStateCreateInfo& vi, std::shared_ptr<VulkanShader> vkShader) -> void
 		{
 			vertexBindingDescription.binding = 0;
 			vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-			vertexBindingDescription.stride = vkShader->getVertexInputStride();
+			vertexBindingDescription.stride = vertexStride == 0 ? vkShader->getVertexInputStride() : vertexStride;
 
 			auto& vertexInputAttributeDescription = vkShader->getVertexInputAttributeDescription();
 
@@ -254,7 +254,7 @@ namespace maple
 		// Vertex layout
 		VkVertexInputBindingDescription      vertexBindingDescription{};
 		VkPipelineVertexInputStateCreateInfo vi{};
-		createVertexLayout(vertexBindingDescription, vi, vkShader);
+		createVertexLayout(info.vertexStride, vertexBindingDescription, vi, vkShader);
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyCI{};
 		VkPipelineRasterizationStateCreateInfo rs{};

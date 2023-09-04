@@ -14,14 +14,14 @@ namespace maple
 
 	class Console
 	{
-	  public:
+	public:
 		static auto  init() -> void;
-		static auto &getLogger()
+		static auto& getLogger()
 		{
 			return logger;
 		}
 
-	  private:
+	private:
 		static std::shared_ptr<spdlog::logger> logger;
 	};
 };        // namespace maple
@@ -37,6 +37,7 @@ namespace maple
 		if (!(condition))                                                                    \
 		{                                                                                    \
 			LOGE("Assertion Failed : {0} . {1} : {2}", __VA_ARGS__, __FUNCTION__, __LINE__); \
+			__debugbreak();																	 \
 		}                                                                                    \
 	}
 

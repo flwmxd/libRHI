@@ -30,12 +30,3 @@ namespace maple
 	auto loadVKAccelerationStructureKHR(VkInstance instance, PFN_vkGetInstanceProcAddr getInstanceProcAddr, VkDevice device, PFN_vkGetDeviceProcAddr getDeviceProcAddr) -> int32_t;
 }        // namespace maple
 
-#define MAPLE_ASSERT(condition, ...)                                                         \
-	{                                                                                        \
-		if (!(condition))                                                                    \
-		{                                                                                    \
-			LOGE("Assertion Failed : {0} . {1} : {2}", __VA_ARGS__, __FUNCTION__, __LINE__); \
-		}                                                                                    \
-	}
-
-#	define PROFILE_FUNCTION()

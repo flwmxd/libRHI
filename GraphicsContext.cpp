@@ -209,7 +209,7 @@ namespace maple
 	{
 		size_t hash = 0;
 
-		hash::hashCode(hash, desc.shader, desc.cullMode, desc.depthBiasEnabled, desc.drawType, desc.polygonMode, desc.transparencyEnabled);
+		hash::hashCode(hash, desc.shader, desc.cullMode, desc.depthBiasEnabled, desc.drawType, desc.polygonMode, desc.transparencyEnabled, desc.vertexStride);
 		hash::hashCode(hash, desc.stencilMask, desc.stencilFunc, desc.stencilFail, desc.stencilDepthFail, desc.stencilDepthPass, desc.depthTest);
 
 		for (auto texture : desc.colorTargets)

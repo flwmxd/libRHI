@@ -391,6 +391,16 @@ namespace maple
 
 	auto VulkanDescriptorSet::setBuffer(const std::string& name, const std::shared_ptr<UniformBuffer>& buffer) -> void
 	{
+		for (auto & uniform : uniformBuffers)
+		{
+			for (auto & pair : uniform)
+			{
+				if (pair.first == name) 
+				{
+					pair.second = buffer;
+				}
+			}
+		}
 	}
 
 	auto VulkanDescriptorSet::getUnifromBuffer(const std::string& name) -> std::shared_ptr<UniformBuffer>

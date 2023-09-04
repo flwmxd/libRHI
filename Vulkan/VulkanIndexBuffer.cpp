@@ -16,7 +16,7 @@ namespace maple
 	                 initCount * sizeof(uint16_t), data, gpuOnly ? VMA_MEMORY_USAGE_GPU_ONLY : VMA_MEMORY_USAGE_CPU_TO_GPU),
 	    size(initCount * sizeof(uint16_t)),
 	    count(initCount),
-	    usage(bufferUsage)
+	    usage(bufferUsage), indexType(VK_INDEX_TYPE_UINT16)
 	{
 	}
 
@@ -28,7 +28,7 @@ namespace maple
 	        initCount * sizeof(uint32_t), data, gpuOnly ? VMA_MEMORY_USAGE_GPU_ONLY : VMA_MEMORY_USAGE_CPU_TO_GPU),
 	    size(initCount * sizeof(uint32_t)),
 	    count(initCount),
-	    usage(bufferUsage)
+	    usage(bufferUsage), indexType(VK_INDEX_TYPE_UINT32)
 	{
 	}
 
@@ -44,7 +44,7 @@ namespace maple
 
 	auto VulkanIndexBuffer::bind(const CommandBuffer *commandBuffer) const -> void
 	{
-		vkCmdBindIndexBuffer(static_cast<const VulkanCommandBuffer *>(commandBuffer)->getCommandBuffer(), buffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(static_cast<const VulkanCommandBuffer *>(commandBuffer)->getCommandBuffer(), buffer, 0, indexType);
 	}
 
 	auto VulkanIndexBuffer::unbind() const -> void
