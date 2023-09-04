@@ -242,7 +242,10 @@ namespace maple
 
 	VulkanShader::VulkanShader(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData)
 	{
-		LOGW("{0} did not implement", __FUNCTION__);
+		shaderStages.resize(2);
+		loadShader(vertData, ShaderType::Vertex, 0);
+		loadShader(fragData, ShaderType::Fragment, 1);
+		createPipelineLayout();
 	}
 
 	VulkanShader::~VulkanShader()

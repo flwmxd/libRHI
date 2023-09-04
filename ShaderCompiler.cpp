@@ -150,9 +150,12 @@ namespace maple
 		glslang::FinalizeProcess();
 	}
 
-	auto ShaderCompiler::complie(const ShaderType& shader_type, const char* pshader, std::vector<uint32_t>& spirv) -> bool
+	auto ShaderCompiler::complie(const ShaderType& shaderType, 
+		const char* pshader,
+		std::vector<uint32_t>& spirv,
+		const char* userDefine) -> bool
 	{
-		EShLanguage stage = findLanguage(shader_type);
+		EShLanguage stage = findLanguage(shaderType);
 		glslang::TShader shader(stage);
 		glslang::TProgram program;
 		const char* shaderStrings[1];
@@ -162,10 +165,13 @@ namespace maple
 		// Enable SPIR-V and Vulkan rules when parsing GLSL
 		EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
 
-		shaderStrings[0] = pshader;
+		shaderStrings[0] = (char*)(pshader);
+
 		shader.setStrings(shaderStrings, 1);
 
-		if (!shader.parse(&Resources, 100, false, messages)) {
+		shader.setPreamble(userDefine);
+
+		if (!shader.parse(&Resources, 450, false, messages)) {
 			LOGW(shader.getInfoLog());
 			LOGW(shader.getInfoDebugLog());
 			return false;  // something didn't work

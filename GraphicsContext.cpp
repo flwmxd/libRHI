@@ -111,6 +111,11 @@ namespace maple
 #endif
 	}
 
+	auto Shader::createRaw(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData) ->Shader*
+	{
+		return new VulkanShader(vertData, fragData);
+	}
+
 	auto FrameBuffer::create(const FrameBufferInfo& desc) -> std::shared_ptr<FrameBuffer>
 	{
 		size_t hash = 0;
@@ -322,12 +327,12 @@ namespace maple
 	auto UniformBuffer::create(uint32_t size, const void* data) -> std::shared_ptr<UniformBuffer>
 	{
 #ifdef MAPLE_VULKAN
-		auto buffer = std::make_shared<VulkanUniformBuffer>();
+		auto buffer = std::make_shared<VulkanUniformBuffer>(size,data);
 #endif
 #ifdef MAPLE_OPENGL
 		auto buffer = std::make_shared<GLUniformBuffer>();
 #endif
-		buffer->setData(size, data);
+		//buffer->setData(size, data);
 		return buffer;
 	}
 

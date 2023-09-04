@@ -142,6 +142,7 @@ namespace maple
 	public:
 		static auto create(const std::string& filepath, const VariableArraySize& size = {})->std::shared_ptr<Shader>;
 		static auto create(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData)->std::shared_ptr<Shader>;
+		static auto createRaw(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData)->Shader*;
 
 	protected:
 		bool     computeShader = false;
