@@ -11,6 +11,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <unordered_set>
 
 namespace maple
 {
@@ -18,15 +19,15 @@ namespace maple
 
 	class  VulkanShader : public Shader
 	{
-	  public:
-		VulkanShader(const std::string &path, const VariableArraySize &size);
-		VulkanShader(const std::vector<uint32_t> &vertData, const std::vector<uint32_t> &fragData);
+	public:
+		VulkanShader(const std::string& path, const VariableArraySize& size);
+		VulkanShader(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData, const std::unordered_set<std::string>& dynamicUniforms);
 		~VulkanShader();
 
-		auto bindPushConstants(const CommandBuffer *commandBuffer, Pipeline *pipeline) -> void override;
+		auto bindPushConstants(const CommandBuffer* commandBuffer, Pipeline* pipeline) -> void override;
 
-		auto bind() const -> void override{};
-		auto unbind() const -> void override{};
+		auto bind() const -> void override {};
+		auto unbind() const -> void override {};
 
 		inline auto getName() const -> const std::string & override
 		{
@@ -37,7 +38,7 @@ namespace maple
 			return filePath;
 		}
 
-		inline auto getHandle() const -> void * override
+		inline auto getHandle() const -> void* override
 		{
 			return nullptr;
 		}
@@ -47,7 +48,7 @@ namespace maple
 			return pushConstants;
 		};
 
-		inline auto getPushConstant(uint32_t index) -> PushConstant * override
+		inline auto getPushConstant(uint32_t index) -> PushConstant* override
 		{
 			if (index < pushConstants.size())
 			{
@@ -67,14 +68,14 @@ namespace maple
 			return std::vector<Descriptor>{};
 		}
 
-		inline auto getDescriptorLayout(uint32_t index) const -> const VkDescriptorSetLayout *
+		inline auto getDescriptorLayout(uint32_t index) const -> const VkDescriptorSetLayout*
 		{
 			if (descriptorSetLayouts.empty())
 				return nullptr;
 			return &descriptorSetLayouts[index];
 		}
 
-		inline auto &getPipelineLayout() const
+		inline auto& getPipelineLayout() const
 		{
 			return pipelineLayout;
 		}
@@ -84,23 +85,23 @@ namespace maple
 			return vertexInputStride;
 		}
 
-		inline auto &getVertexInputAttributeDescription() const
+		inline auto& getVertexInputAttributeDescription() const
 		{
 			return vertexInputAttributeDescriptions;
 		}
 
-		inline auto &getShaderStages() const
+		inline auto& getShaderStages() const
 		{
 			return shaderStages;
 		}
-		
-		inline auto &getShaderGroups() const
+
+		inline auto& getShaderGroups() const
 		{
 			return shaderGroups;
 		}
-		
-	  private:
-		auto loadShader(const std::vector<uint32_t> &spvCode, ShaderType type, int32_t currentShaderStage) -> void;
+
+	private:
+		auto loadShader(const std::vector<uint32_t>& spvCode, ShaderType type, int32_t currentShaderStage) -> void;
 		auto init() -> void;
 		auto createPipelineLayout() -> void;
 		auto unload() const -> void;
@@ -122,5 +123,6 @@ namespace maple
 		std::unordered_map<uint32_t, std::vector<Descriptor>> descriptorInfos;
 		VariableArraySize                                     arraySize;
 		std::unordered_multimap<std::string, VkPipelineShaderStageCreateInfo> shaderGroups;
+		std::unordered_set<std::string> dynamicUniforms;
 	};
 };        // namespace maple

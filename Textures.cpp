@@ -130,8 +130,8 @@ namespace maple
 
 	auto Texture2D::getTexture1X1White() ->std::shared_ptr<Texture2D>
 	{
-		static float color[4] = {1,1,1,1};
-		static std::shared_ptr<Texture2D> defaultTexture = create(1,1, color);
+		static uint32_t color = 0xFFFFFFFF;
+		static std::shared_ptr<Texture2D> defaultTexture = create(1,1, &color);
 		return defaultTexture;
 	}
 

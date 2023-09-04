@@ -117,7 +117,7 @@ namespace maple
 
 		for (auto& descriptor : descriptors)
 		{
-			if (descriptor.type == DescriptorType::UniformBuffer)
+			if (descriptor.type == DescriptorType::UniformBuffer || descriptor.type == DescriptorType::UniformBufferDynamic)
 			{
 				for (uint32_t frame = 0; frame < framesInFlight; frame++)
 				{

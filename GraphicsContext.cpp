@@ -101,19 +101,19 @@ namespace maple
 #endif
 	}
 
-	auto Shader::create(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData) -> std::shared_ptr<Shader>
+	auto Shader::create(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData, const std::unordered_set<std::string>& dynamicUniforms) -> std::shared_ptr<Shader>
 	{
 #ifdef MAPLE_VULKAN
-		return std::make_shared<VulkanShader>(vertData, fragData);
+		return std::make_shared<VulkanShader>(vertData, fragData, dynamicUniforms);
 #endif
 #ifdef MAPLE_OPENGL
 		return std::make_shared<GLShader>(vertData, fragData);
 #endif
 	}
 
-	auto Shader::createRaw(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData) ->Shader*
+	auto Shader::createRaw(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData, const std::unordered_set<std::string>& dynamicUniforms) ->Shader*
 	{
-		return new VulkanShader(vertData, fragData);
+		return new VulkanShader(vertData, fragData, dynamicUniforms);
 	}
 
 	auto FrameBuffer::create(const FrameBufferInfo& desc) -> std::shared_ptr<FrameBuffer>

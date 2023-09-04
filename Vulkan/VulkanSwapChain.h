@@ -38,7 +38,7 @@ namespace maple
 
 		auto getCurrentImage() -> std::shared_ptr<Texture> override
 		{
-			return swapChainBuffers[acquireImageIndex];
+			return swapChainBuffers[currentBuffer];
 		}
 		auto getImage(uint32_t index) -> std::shared_ptr<Texture> override
 		{

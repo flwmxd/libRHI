@@ -240,7 +240,8 @@ namespace maple
 		//}
 	}
 
-	VulkanShader::VulkanShader(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData)
+	VulkanShader::VulkanShader(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData, const std::unordered_set<std::string>& dynamicUniforms)
+		:dynamicUniforms(dynamicUniforms)
 	{
 		shaderStages.resize(2);
 		loadShader(vertData, ShaderType::Vertex, 0);
@@ -582,7 +583,14 @@ namespace maple
 			auto& type = comp.get_type(u.type_id);
 
 			LOGI("Uniform {0} at set = {1}, binding = {2}", u.name, set, binding);
-			descriptorLayoutInfo.push_back({ DescriptorType::UniformBuffer, shaderType, binding, set, type.array.size() ? uint32_t(type.array[0]) : 1 });
+
+			descriptorLayoutInfo.push_back({ 
+				dynamicUniforms.count(u.name) > 0 ? DescriptorType::UniformBufferDynamic : DescriptorType::UniformBuffer, 
+				shaderType, 
+				binding, 
+				set, 
+				type.array.size() ? uint32_t(type.array[0]) : 1 
+			});
 
 			auto& bufferType = comp.get_type(u.base_type_id);
 			auto  bufferSize = comp.get_declared_struct_size(bufferType);
@@ -595,7 +603,7 @@ namespace maple
 			descriptor.name = u.name;
 			descriptor.offset = 0;
 			descriptor.shaderType = shaderType;
-			descriptor.type = DescriptorType::UniformBuffer;
+			descriptor.type = dynamicUniforms.count(u.name) > 0 ? DescriptorType::UniformBufferDynamic : DescriptorType::UniformBuffer;
 			descriptor.buffer = nullptr;
 
 			for (int32_t i = 0; i < memberCount; i++)
