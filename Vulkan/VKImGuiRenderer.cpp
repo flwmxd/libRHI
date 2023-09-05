@@ -119,7 +119,7 @@ namespace maple
 	{
 		PROFILE_FUNCTION();
 		auto commandBuffer = VulkanContext::get()->getSwapChain()->getCurrentCommandBuffer();
-		g_WindowData.FrameIndex = VulkanContext::get()->getSwapChain()->getCurrentBufferIndex();
+		g_WindowData.FrameIndex = VulkanContext::get()->getSwapChain()->getCurrentImageIndex();
 		auto  vkCommnadBuffer = (VulkanCommandBuffer*)commandBuffer;
 		float clearColor[4] = { 0.1f, 0.1f, 0.1f, 1.f };
 

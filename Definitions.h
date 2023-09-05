@@ -363,6 +363,7 @@ namespace maple
 		bool clearTargets = false;
 		bool stencilTest = false;
 		bool depthTest = true;
+		bool depthWriteEnable = true;
 
 		uint32_t    stencilMask = 0x00;
 		StencilType stencilFunc = StencilType::Always;

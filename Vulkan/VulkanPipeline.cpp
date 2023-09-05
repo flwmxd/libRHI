@@ -69,7 +69,7 @@ namespace maple
 			ds.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 			ds.pNext = NULL;
 			ds.depthTestEnable = info.depthTest ? VK_TRUE : VK_FALSE;
-			ds.depthWriteEnable = VK_TRUE;
+			ds.depthWriteEnable = info.depthWriteEnable ? VK_TRUE : VK_FALSE;
 			ds.depthCompareOp = convertCompareOp(info.depthFunc);
 			ds.depthBoundsTestEnable = VK_FALSE;
 			ds.stencilTestEnable = info.stencilTest ? VK_TRUE : VK_FALSE;

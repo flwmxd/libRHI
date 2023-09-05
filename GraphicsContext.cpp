@@ -209,7 +209,7 @@ namespace maple
 	{
 		size_t hash = 0;
 
-		hash::hashCode(hash, desc.shader, desc.cullMode, desc.depthBiasEnabled, desc.drawType, desc.polygonMode, desc.transparencyEnabled, desc.vertexStride);
+		hash::hashCode(hash, desc.shader, desc.cullMode, desc.depthBiasEnabled, desc.drawType, desc.polygonMode, desc.transparencyEnabled, desc.vertexStride, desc.depthWriteEnable);
 		hash::hashCode(hash, desc.stencilMask, desc.stencilFunc, desc.stencilFail, desc.stencilDepthFail, desc.stencilDepthPass, desc.depthTest);
 
 		for (auto texture : desc.colorTargets)
@@ -327,7 +327,7 @@ namespace maple
 	auto UniformBuffer::create(uint32_t size, const void* data) -> std::shared_ptr<UniformBuffer>
 	{
 #ifdef MAPLE_VULKAN
-		auto buffer = std::make_shared<VulkanUniformBuffer>(size,data);
+		auto buffer = std::make_shared<VulkanUniformBuffer>(size, data);
 #endif
 #ifdef MAPLE_OPENGL
 		auto buffer = std::make_shared<GLUniformBuffer>();
@@ -396,8 +396,8 @@ namespace maple
 #endif
 	}
 
-	auto ImGuiRenderer::create(uint32_t width, uint32_t height, bool clearScreen)->std::shared_ptr<ImGuiRenderer> 
+	auto ImGuiRenderer::create(uint32_t width, uint32_t height, bool clearScreen)->std::shared_ptr<ImGuiRenderer>
 	{
-		return std::make_shared<VKImGuiRenderer>(width,height,clearScreen);
+		return std::make_shared<VKImGuiRenderer>(width, height, clearScreen);
 	}
 }        // namespace maple
