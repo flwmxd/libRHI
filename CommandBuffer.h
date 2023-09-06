@@ -5,13 +5,15 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-
 namespace maple
 {
+	struct ivec4;
+	struct vec4;
+
 	class RenderPass;
 	class FrameBuffer;
 	class Pipeline;
-
+	class Texture;
 	enum class CommandBufferType : uint8_t
 	{
 		Graphics,
@@ -39,6 +41,7 @@ namespace maple
 		virtual auto bindPipeline(Pipeline *pipeline) -> void                                            = 0;
 		virtual auto unbindPipeline() -> void                                                            = 0;
 		virtual auto endSingleTimeCommands() -> void                                                     = 0;
+		virtual auto clearAttachments(const  std::shared_ptr<Texture>& attachments, const maple::vec4& value, const maple::ivec4& rect) -> void = 0;
 		virtual auto isRecording() const -> bool
 		{
 			return true;

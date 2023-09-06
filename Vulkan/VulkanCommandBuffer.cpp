@@ -183,8 +183,33 @@ namespace maple
 		//viewport param
 		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-		//scissor test.
+		////scissor test.
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+	}
+
+	auto VulkanCommandBuffer::clearAttachments(const std::shared_ptr<Texture> & attachments, const maple::vec4& value, const maple::ivec4& rect) -> void
+	{
+		VkClearAttachment attachment{};
+		if (attachments->getType() == TextureType::Color) 
+		{
+			attachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			attachment.colorAttachment = 0;
+			attachment.clearValue.color.float32[0] = value.x;
+			attachment.clearValue.color.float32[1] = value.y;
+			attachment.clearValue.color.float32[2] = value.z;
+			attachment.clearValue.color.float32[3] = value.w;
+		}
+		else if (attachments->getType() == TextureType::Depth) 
+		{
+			attachment.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+			attachment.clearValue.depthStencil.depth = value.x;
+		}
+		
+		VkClearRect rects{};
+		rects.rect.offset = { rect.x,rect.y };
+		rects.rect.extent = { (uint32_t)rect.z,(uint32_t)rect.w };
+		rects.layerCount = 1;
+		vkCmdClearAttachments(commandBuffer,1, &attachment, 1,&rects);
 	}
 
 	auto VulkanCommandBuffer::bindPipeline(Pipeline* pipeline) -> void

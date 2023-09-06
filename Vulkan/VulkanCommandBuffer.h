@@ -33,6 +33,7 @@ namespace maple
 		auto executeSecondary(const CommandBuffer *primaryCmdBuffer) -> void override;
 		auto updateViewport(uint32_t width, uint32_t height) const -> void override;
 		auto updateViewport(int32_t x, int32_t y, uint32_t width, uint32_t height) const -> void override;
+		auto clearAttachments(const std::shared_ptr<Texture> & attachments, const maple::vec4 & value, const maple::ivec4& rect) -> void override;
 
 		auto bindPipeline(Pipeline *pipeline) -> void override;
 		auto unbindPipeline() -> void override;
