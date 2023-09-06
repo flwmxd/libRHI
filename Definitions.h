@@ -390,7 +390,6 @@ namespace maple
 		uint32_t    groupCountZ = 1;
 		uint32_t    maxRayRecursionDepth = 2;
 		std::string pipelineName;
-		uint32_t	vertexStride = 0;
 	};
 
 	enum MemoryBarrierFlags : int32_t        //todo

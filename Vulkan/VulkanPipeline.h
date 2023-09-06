@@ -27,9 +27,12 @@ namespace maple
 
 		auto bind(const CommandBuffer *commandBuffer, uint32_t layer = 0, int32_t cubeFace = -1, int32_t mipMapLevel = 0) -> FrameBuffer * override;
 		auto bind(const CommandBuffer *commandBuffer, const ivec4 &viewport) -> FrameBuffer * override;
+		auto beginSecondary(const CommandBuffer* commandBuffer, uint32_t layer = 0, int32_t cubeFace = -1, int32_t mipMapLevel = 0) -> void override;
 
 		auto end(const CommandBuffer *commandBuffer) -> void override;
 		auto clearRenderTargets(const CommandBuffer *commandBuffer) -> void override;
+		auto getRenderPass()->std::shared_ptr<RenderPass> override;
+		auto getFrameBuffer()->std::shared_ptr<FrameBuffer> override;
 
 		inline auto getShader() const -> std::shared_ptr<Shader> override
 		{

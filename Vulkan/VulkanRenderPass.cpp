@@ -222,7 +222,8 @@ namespace maple
 		if (!started)
 			vkCmdBeginRenderPass(vkCmd->getCommandBuffer(), &info, subPassContentsToVK(contents));
 		started = true;
-		commandBuffer->updateViewport(width, height);
+		if(contents == SubPassContents::Inline)
+			commandBuffer->updateViewport(width, height);
 	}
 
 	auto VulkanRenderPass::beginRenderPass(const CommandBuffer* commandBuffer, const float* clearColor, FrameBuffer* frame, SubPassContents contents, uint32_t width, uint32_t height, const int32_t * viewport) const -> void

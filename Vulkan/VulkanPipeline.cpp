@@ -99,11 +99,11 @@ namespace maple
 			ms.minSampleShading = 0.0;
 		}
 
-		inline auto createVertexLayout(uint32_t vertexStride, VkVertexInputBindingDescription& vertexBindingDescription, VkPipelineVertexInputStateCreateInfo& vi, std::shared_ptr<VulkanShader> vkShader) -> void
+		inline auto createVertexLayout(VkVertexInputBindingDescription& vertexBindingDescription, VkPipelineVertexInputStateCreateInfo& vi, std::shared_ptr<VulkanShader> vkShader) -> void
 		{
 			vertexBindingDescription.binding = 0;
 			vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-			vertexBindingDescription.stride = vertexStride == 0 ? vkShader->getVertexInputStride() : vertexStride;
+			vertexBindingDescription.stride = vkShader->getVertexInputStride();
 
 			auto& vertexInputAttributeDescription = vkShader->getVertexInputAttributeDescription();
 
@@ -129,7 +129,7 @@ namespace maple
 			//TODO there is a bug here.
 			//because vulkan Y axis is up to down and different with opengl
 			//http://anki3d.org/vulkan-coordinate-system/
-			rs.frontFace = VK_FRONT_FACE_CLOCKWISE;        //VK_FRONT_FACE_COUNTER_CLOCKWISE;//
+			rs.frontFace = VK_FRONT_FACE_CLOCKWISE;////info.flipY && info.swapChainTarget ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
 			rs.depthClampEnable = VK_FALSE;
 			rs.rasterizerDiscardEnable = VK_FALSE;
@@ -254,7 +254,7 @@ namespace maple
 		// Vertex layout
 		VkVertexInputBindingDescription      vertexBindingDescription{};
 		VkPipelineVertexInputStateCreateInfo vi{};
-		createVertexLayout(info.vertexStride, vertexBindingDescription, vi, vkShader);
+		createVertexLayout(vertexBindingDescription, vi, vkShader);
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyCI{};
 		VkPipelineRasterizationStateCreateInfo rs{};
@@ -356,6 +356,26 @@ namespace maple
 		return 0;
 	}
 
+	auto VulkanPipeline::beginSecondary(const CommandBuffer* commandBuffer, uint32_t layer /*= 0*/, int32_t cubeFace /*= -1*/, int32_t mipMapLevel /*= 0*/) -> void
+	{
+		auto mipScale = std::pow(0.5, mipMapLevel);
+		FrameBuffer* framebuffer = nullptr;
+		transitionAttachments();
+		if (description.swapChainTarget)
+		{
+			framebuffer = framebuffers[VulkanContext::get()->getSwapChain()->getCurrentImageIndex()].get();
+		}
+		else if (description.depthArrayTarget)
+		{
+			framebuffer = framebuffers[layer].get();
+		}
+		else
+		{
+			framebuffer = framebuffers[0].get();
+		}
+		renderPass->beginRenderPass(commandBuffer, (float*)&description.clearColor, framebuffer, SubPassContents::Secondary, getWidth() * mipScale, getHeight() * mipScale, cubeFace, mipMapLevel);
+	}
+
 	auto VulkanPipeline::bind(const CommandBuffer* cmdBuffer, uint32_t layer, int32_t cubeFace, int32_t mipMapLevel) -> FrameBuffer*
 	{
 		PROFILE_FUNCTION();
@@ -379,7 +399,15 @@ namespace maple
 		}
 
 		auto mipScale = std::pow(0.5, mipMapLevel);
-		renderPass->beginRenderPass(cmdBuffer, (float*)&description.clearColor, framebuffer, SubPassContents::Inline, getWidth() * mipScale, getHeight() * mipScale, cubeFace, mipMapLevel);
+		if (!cmdBuffer->isSecondary())
+		{
+			renderPass->beginRenderPass(cmdBuffer, (float*)&description.clearColor, framebuffer, SubPassContents::Inline, getWidth() * mipScale, getHeight() * mipScale, cubeFace, mipMapLevel);
+		}
+		else 
+		{
+			cmdBuffer->updateViewport(getWidth() * mipScale, getHeight() * mipScale);
+		}
+
 		vkCmdBindPipeline(static_cast<const VulkanCommandBuffer*>(cmdBuffer)->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 		return framebuffer;
 	}
@@ -401,7 +429,8 @@ namespace maple
 		{
 			framebuffer = framebuffers[0].get();
 		}
-		renderPass->beginRenderPass(cmdBuffer, (float*)&description.clearColor, framebuffer, SubPassContents::Inline, getWidth(), getHeight(), (int32_t*)&viewport);
+		if (!cmdBuffer->isSecondary())
+			renderPass->beginRenderPass(cmdBuffer, (float*)&description.clearColor, framebuffer, SubPassContents::Inline, getWidth(), getHeight(), (int32_t*)&viewport);
 		vkCmdBindPipeline(static_cast<const VulkanCommandBuffer*>(cmdBuffer)->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 		return framebuffer;
 	}
@@ -409,7 +438,8 @@ namespace maple
 	auto VulkanPipeline::end(const CommandBuffer* commandBuffer) -> void
 	{
 		PROFILE_FUNCTION();
-		renderPass->endRenderPass(commandBuffer);
+		if (!commandBuffer->isSecondary())
+			renderPass->endRenderPass(commandBuffer);
 	}
 
 	auto VulkanPipeline::clearRenderTargets(const CommandBuffer* commandBuffer) -> void
@@ -439,6 +469,23 @@ namespace maple
 			{
 				RenderDevice::get()->clearRenderTarget(texture, commandBuffer);
 			}
+		}
+	}
+
+	auto VulkanPipeline::getRenderPass() ->std::shared_ptr<RenderPass>
+	{
+		return renderPass;
+	}
+
+	auto VulkanPipeline::getFrameBuffer() ->std::shared_ptr<FrameBuffer>
+	{
+		if (description.swapChainTarget)
+		{
+			return framebuffers[VulkanContext::get()->getSwapChain()->getCurrentImageIndex()];
+		}
+		else
+		{
+			return framebuffers[0];
 		}
 	}
 

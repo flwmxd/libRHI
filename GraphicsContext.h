@@ -67,6 +67,8 @@ namespace maple
 		virtual auto getTotalGPUMemory() -> float = 0;
 		virtual auto isRaytracingSupported() -> bool = 0;
 		virtual auto immediateSubmit(const std::function<void(CommandBuffer*)>& execute) -> void = 0;
+		virtual auto createOnceCommandBuffer()->std::shared_ptr<CommandBuffer> = 0;
+		virtual auto submitOnceCommandBuffer(std::shared_ptr<CommandBuffer>) -> void = 0;
 
 		inline auto getSwapChain() -> std::shared_ptr<SwapChain>
 		{

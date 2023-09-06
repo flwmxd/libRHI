@@ -151,13 +151,16 @@ namespace maple
 		state = CommandBufferState::Ended;
 	}
 
-	auto VulkanCommandBuffer::executeSecondary(const CommandBuffer* primaryCmdBuffer) -> void
+	auto VulkanCommandBuffer::executeSecondary(const CommandBuffer::Ptr& secondaryCmdBuffer) -> void
 	{
-		PROFILE_FUNCTION();
-		MAPLE_ASSERT(!primary, "Used ExecuteSecondary on primary command buffer!");
-		state = CommandBufferState::Submitted;
+		secondaryCommands.push_back(secondaryCmdBuffer);
 
-		vkCmdExecuteCommands(static_cast<const VulkanCommandBuffer*>(primaryCmdBuffer)->getCommandBuffer(), 1, &commandBuffer);
+		PROFILE_FUNCTION();
+		MAPLE_ASSERT(primary, "Used ExecuteSecondary on secondary command buffer!");
+		//state = CommandBufferState::Submitted;
+		auto vkCmd = std::static_pointer_cast<VulkanCommandBuffer>(secondaryCmdBuffer);
+		auto secCmd = vkCmd->getCommandBuffer();
+		vkCmdExecuteCommands(commandBuffer, 1, &secCmd);
 	}
 
 	auto VulkanCommandBuffer::updateViewport(uint32_t width, uint32_t height) const -> void
@@ -173,6 +176,7 @@ namespace maple
 		viewport.y = y >= 0 ? (float)y : 0;
 		viewport.width = static_cast<float>(width);
 		viewport.height = static_cast<float>(height);
+
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
@@ -279,6 +283,8 @@ namespace maple
 		//fence->wait();
 
 		state = CommandBufferState::Submitted;
+
+		secondaryCommands.clear();
 	}
 
 	auto VulkanCommandBuffer::addTask(const std::function<void(const CommandBuffer*)>& task) -> void
