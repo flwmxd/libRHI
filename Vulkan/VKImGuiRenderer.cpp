@@ -115,7 +115,7 @@ namespace maple
 		ImGui::NewFrame();
 	}
 
-	auto VKImGuiRenderer::render() -> void
+	auto VKImGuiRenderer::render(const std::function<void()>& userCallback) -> void
 	{
 		PROFILE_FUNCTION();
 		auto commandBuffer = VulkanContext::get()->getSwapChain()->getCurrentCommandBuffer();
@@ -124,7 +124,14 @@ namespace maple
 		float clearColor[4] = { 0.1f, 0.1f, 0.1f, 1.f };
 
 		renderPass->beginRenderPass(commandBuffer, clearColor, frameBuffers[g_WindowData.FrameIndex].get(), SubPassContents::Inline, g_WindowData.Width, g_WindowData.Height, -1, 0);
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), static_cast<VulkanCommandBuffer*>(commandBuffer)->getCommandBuffer());
+		if (userCallback)
+		{
+			userCallback();
+		}
+		else 
+		{
+			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), static_cast<VulkanCommandBuffer*>(commandBuffer)->getCommandBuffer());
+		}
 		renderPass->endRenderPass(commandBuffer);
 	}
 

@@ -19,6 +19,8 @@ namespace maple
 		virtual auto unbind() const -> void                                           = 0;
 		virtual auto getCount() const -> uint32_t                                     = 0;
 		virtual auto setCount(uint32_t indexCount) -> void                            = 0;
+		virtual auto setData(const uint16_t* data, uint32_t count) -> void = 0;
+		virtual auto setData(const uint32_t* data, uint32_t count) -> void = 0;
 
 		virtual auto releasePointer() -> void{};
 

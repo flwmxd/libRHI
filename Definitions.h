@@ -298,6 +298,7 @@ namespace maple
 		Triangle,
 		Lines,
 		TriangleStrip,
+		Triangle_Fan,
 		Lines_Strip
 	};
 

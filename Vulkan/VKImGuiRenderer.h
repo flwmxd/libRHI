@@ -20,7 +20,7 @@ namespace maple
 
 		auto init() -> void override;
 		auto newFrame() -> void override;
-		auto render() -> void override;
+		auto render(const std::function<void()> & userCallback = nullptr) -> void override;
 		auto onResize(uint32_t width, uint32_t height) -> void override;
 		auto rebuildFontTexture() -> void override;
 

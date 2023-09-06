@@ -28,6 +28,10 @@ namespace maple
 		auto setData(uint32_t size, const void *data) -> void;
 		auto releasePointer() -> void override;
 
+		auto setData(const uint16_t* data, uint32_t count) -> void override;
+
+		auto setData(const uint32_t* data, uint32_t count) -> void override;
+
 		auto copy(CommandBuffer *cmd, GPUBuffer *to, const BufferCopy &copy) const -> void override;
 
 		auto getPointerInternal() -> void * override;
