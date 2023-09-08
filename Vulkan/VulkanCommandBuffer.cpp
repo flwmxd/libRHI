@@ -102,7 +102,7 @@ namespace maple
 
 		VkCommandBufferBeginInfo beginCI{};
 		beginCI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginCI.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		beginCI.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 		VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &beginCI));
 
 		for (auto task : tasks)
@@ -249,6 +249,31 @@ namespace maple
 	auto VulkanCommandBuffer::endSingleTimeCommands() -> void
 	{
 		VulkanHelper::endSingleTimeCommands(commandBuffer);
+	}
+
+	auto VulkanCommandBuffer::submit() -> void
+	{
+		endRecording();
+
+		if (updateFence == nullptr)
+		{
+			updateFence = std::make_unique<VulkanFence>();
+		}
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		submitInfo.pSignalSemaphores = nullptr;
+		submitInfo.pNext = nullptr;
+		submitInfo.pWaitDstStageMask = nullptr;
+		submitInfo.signalSemaphoreCount = 0;
+		submitInfo.waitSemaphoreCount = 0;
+
+		VK_CHECK_RESULT(vkQueueSubmit(VulkanDevice::get()->getGraphicsQueue(), 1, &submitInfo, updateFence->getHandle()));
+		updateFence->waitAndReset();
+
+		beginRecording();
 	}
 
 	auto VulkanCommandBuffer::executeInternal(const std::vector<VkPipelineStageFlags>& flags,

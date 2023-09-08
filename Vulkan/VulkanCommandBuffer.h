@@ -41,6 +41,8 @@ namespace maple
 		auto flush() -> bool override;
 		auto endSingleTimeCommands() -> void override;
 
+		auto submit() -> void override;
+
 		inline auto isRecording() const -> bool override
 		{
 			return state == CommandBufferState::Recording;
@@ -94,5 +96,6 @@ namespace maple
 		std::shared_ptr<VulkanFence>                            fence;
 		VkSemaphore                                             rendererSemaphore = VK_NULL_HANDLE;
 		std::vector< CommandBuffer::Ptr> secondaryCommands;
+		std::unique_ptr<VulkanFence> updateFence;
 	};
 };        // namespace maple

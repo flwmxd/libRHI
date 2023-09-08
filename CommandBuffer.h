@@ -52,5 +52,6 @@ namespace maple
 		}
 		virtual auto addTask(const std::function<void(const CommandBuffer* command)>& task) -> void {};
 		virtual auto isSecondary()const  -> bool = 0;
+		virtual auto submit() -> void = 0;
 	};
 }        // namespace maple
