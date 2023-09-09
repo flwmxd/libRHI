@@ -90,6 +90,8 @@ namespace maple
 			return id;
 		}
 
+		virtual auto setSampler(const std::shared_ptr<Sampler> &sampler) -> void{};
+
 	public:
 		static auto getStrideFromFormat(TextureFormat format)->uint8_t;
 		static auto bitsToTextureFormat(uint32_t bits)->TextureFormat;

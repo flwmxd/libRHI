@@ -259,6 +259,7 @@ namespace maple
 	{
 		auto textureFormatToVK(const TextureFormat &format, bool srgb = false, bool ignoreAssert = false) -> VkFormat;
 		auto textureFilterToVK(TextureFilter filter) -> VkFilter;
+		auto textureMipmapFilterToVK(TextureFilter filter) -> VkSamplerMipmapMode;
 		auto textureWrapToVK(TextureWrap wrap) -> VkSamplerAddressMode;
 		auto drawTypeToTopology(DrawType type) -> VkPrimitiveTopology;
 		auto cullModeToVk(CullMode cull) -> VkCullModeFlags;

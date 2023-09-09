@@ -104,6 +104,8 @@ namespace maple
 			return vkFormat;
 		}
 
+		auto setSampler(const std::shared_ptr<Sampler> &sampler) -> void override;
+
 		auto load() -> bool;
 
 		auto updateDescriptor() -> void;

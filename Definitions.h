@@ -42,6 +42,7 @@ namespace maple
 	class Mesh;
 	class Material;
 	class Skeleton;
+	class Sampler;
 
 	enum class TextureType : int32_t;
 	enum class TextureFormat;
