@@ -12,12 +12,12 @@ namespace maple
 	public:
 		using Ptr = std::shared_ptr<Sampler>;
 
-		Sampler(TextureFilter filter, TextureWrap wrapU, TextureWrap wrapV,  float maxAnisotropy)
-		    : filter(filter), wrapV(wrapV), wrapU(wrapU), wrapW(wrapW), maxAnisotropy(maxAnisotropy)
+		Sampler(TextureFilter filter, TextureWrap wrapU, TextureWrap wrapV, float maxAnisotropy, uint32_t mipmap)
+		    : filter(filter), wrapV(wrapV), wrapU(wrapU), wrapW(wrapW), maxAnisotropy(maxAnisotropy), mipmap(mipmap)
 		{
 		}
 
-		static auto create(TextureFilter filter, TextureWrap wrapU, TextureWrap wrapV, float maxAnisotropy) -> Ptr;
+		static auto create(TextureFilter filter, TextureWrap wrapU, TextureWrap wrapV, float maxAnisotropy, uint32_t mipmap) -> Ptr;
 
 		inline auto getFilter() const { return filter; }
 		inline auto getWrapU() const { return wrapU; }
@@ -30,5 +30,6 @@ namespace maple
 		TextureWrap wrapV;
 		TextureWrap wrapW;
 		float maxAnisotropy;
+		uint32_t mipmap;
 	};
 } // namespace maple

@@ -9,8 +9,8 @@
 #include "VulkanContext.h"
 #include "VulkanDevice.h"
 #include "VulkanFrameBuffer.h"
-#include "VulkanSwapChain.h"
 #include "VulkanSampler.h"
+#include "VulkanSwapChain.h"
 #include <cassert>
 
 namespace maple
@@ -157,11 +157,11 @@ namespace maple
 	{
 		id = IdGenerator++;
 		deleteImage = false;
-		textureSampler = VulkanHelper::createTextureSampler(
-		    VkConverter::textureFilterToVK(parameters.magFilter), VkConverter::textureFilterToVK(parameters.minFilter), 0.0f,
-		    static_cast<float>(mipLevels), true, VulkanDevice::get()->getPhysicalDevice()->getProperties().limits.maxSamplerAnisotropy,
-		    VkConverter::textureWrapToVK(parameters.wrap), VkConverter::textureWrapToVK(parameters.wrap),
-		    VkConverter::textureWrapToVK(parameters.wrap));
+
+		auto phyDevice = VulkanDevice::get()->getPhysicalDevice();
+		// todo mipmap level
+		setSampler(Sampler::create(parameters.minFilter, parameters.wrap, parameters.wrap, phyDevice->getProperties().limits.maxSamplerAnisotropy,
+		                           static_cast<float>(mipLevels)));
 
 		updateDescriptor();
 	}
@@ -182,18 +182,45 @@ namespace maple
 		deleteSampler();
 	}
 
-	auto VulkanTexture2D::update(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const void *buffer) -> void
+	auto VulkanTexture2D::update(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const void *buffer, bool mipmap) -> void
 	{
 		auto stagingBuffer = std::make_unique<VulkanBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, w * h * tools::getFormatSize(parameters.format), buffer);
 		auto oldLayout = imageLayout;
 		transitionImage(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		VulkanHelper::copyBufferToImage(stagingBuffer->getVkBuffer(), textureImage, static_cast<uint32_t>(w), static_cast<uint32_t>(h), 1, x, y, 0);
 
-		if(loadOptions.generateMipMaps) {
+		if(loadOptions.generateMipMaps || mipmap) {
 			tools::generateMipmaps(textureImage, VkConverter::textureFormatToVK(parameters.format, false), width, height, 1, mipLevels);
 		}
 
 		transitionImage(oldLayout);
+	}
+
+	auto VulkanTexture2D::copyImage(const CommandBuffer *cmd, uint8_t *out) -> void
+	{
+		auto vkCmd = static_cast<const VulkanCommandBuffer *>(cmd);
+		auto oldLayout = imageLayout;
+		transitionImage(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vkCmd);
+		auto readBackBuffer = std::make_unique<VulkanBuffer>(VK_BUFFER_USAGE_TRANSFER_DST_BIT, width * height * tools::getFormatSize(parameters.format),
+		                                                     nullptr, VMA_MEMORY_USAGE_GPU_TO_CPU);
+		VkBufferImageCopy bufferImageCopy = {};
+		bufferImageCopy.bufferOffset = 0;
+		bufferImageCopy.bufferRowLength = 0;
+		bufferImageCopy.bufferImageHeight = 0;
+		bufferImageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		bufferImageCopy.imageSubresource.mipLevel = 0;
+		bufferImageCopy.imageSubresource.baseArrayLayer = 0;
+		bufferImageCopy.imageSubresource.layerCount = 1;
+		bufferImageCopy.imageOffset.x = 0;
+		bufferImageCopy.imageOffset.y = 0;
+		bufferImageCopy.imageOffset.z = 0;
+		bufferImageCopy.imageExtent.width = width;
+		bufferImageCopy.imageExtent.height = height;
+		bufferImageCopy.imageExtent.depth = 1;
+		vkCmdCopyImageToBuffer(vkCmd->getCommandBuffer(), textureImage, imageLayout, readBackBuffer->getVkBuffer(), 1, &bufferImageCopy);
+		transitionImage(oldLayout, vkCmd);
+		readBackBuffer->map();
+		memcpy(out, readBackBuffer->getMapped(), sizeof(width * height * tools::getFormatSize(parameters.format)));
 	}
 
 	auto VulkanTexture2D::getDescriptorInfo(int32_t mipLvl, TextureFormat format) -> void *
@@ -214,7 +241,7 @@ namespace maple
 		return textureFboImageView;
 	}
 
-	auto VulkanTexture2D::setSampler(const std::shared_ptr<Sampler> &sampler) -> void 
+	auto VulkanTexture2D::setSampler(const std::shared_ptr<Sampler> &sampler) -> void
 	{
 		textureSampler = std::static_pointer_cast<VulkanSampler>(sampler)->getSampler();
 		updateDescriptor();
@@ -272,11 +299,16 @@ namespace maple
 		MAPLE_ASSERT(textureImage != nullptr, "Create Image Fail");
 
 		textureImageView = VulkanHelper::createImageView(textureImage, vkFormat, mipLevels, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-		textureSampler = VulkanHelper::createTextureSampler(
-		    VkConverter::textureFilterToVK(parameters.magFilter), VkConverter::textureFilterToVK(parameters.minFilter), 0.0f,
-		    static_cast<float>(mipLevels), true, VulkanDevice::get()->getPhysicalDevice()->getProperties().limits.maxSamplerAnisotropy,
-		    VkConverter::textureWrapToVK(parameters.wrap), VkConverter::textureWrapToVK(parameters.wrap),
-		    VkConverter::textureWrapToVK(parameters.wrap));
+
+		if(textureSampler == nullptr) 
+		{
+			textureSampler = VulkanHelper::createTextureSampler(
+			    VkConverter::textureFilterToVK(parameters.magFilter), VkConverter::textureFilterToVK(parameters.minFilter), 0.0f,
+			    static_cast<float>(mipLevels), true, VulkanDevice::get()->getPhysicalDevice()->getProperties().limits.maxSamplerAnisotropy,
+			    VkConverter::textureWrapToVK(parameters.wrap), VkConverter::textureWrapToVK(parameters.wrap),
+			    VkConverter::textureWrapToVK(parameters.wrap));
+		}
+
 
 		imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
@@ -451,12 +483,17 @@ namespace maple
 
 		auto phyDevice = VulkanDevice::get()->getPhysicalDevice();
 
-		textureSampler = VulkanHelper::createTextureSampler(
+		//todo mipmap level
+		setSampler(Sampler::create(parameters.minFilter, parameters.wrap, parameters.wrap, phyDevice->getProperties().limits.maxSamplerAnisotropy,
+		                           static_cast<float>(mipLevels)));
+
+
+	/*	textureSampler = VulkanHelper::createTextureSampler(
 		    VkConverter::textureFilterToVK(parameters.magFilter), VkConverter::textureFilterToVK(parameters.minFilter), 0.0f,
 		    static_cast<float>(mipLevels), true, phyDevice->getProperties().limits.maxSamplerAnisotropy, VkConverter::textureWrapToVK(parameters.wrap),
 		    VkConverter::textureWrapToVK(parameters.wrap), VkConverter::textureWrapToVK(parameters.wrap));
 
-		updateDescriptor();
+		updateDescriptor();*/
 	}
 
 	auto VulkanTexture2D::deleteSampler(bool delSampler) -> void
@@ -467,11 +504,11 @@ namespace maple
 
 		auto &deletionQueue = VulkanContext::getDeletionQueue();
 
-		if(textureSampler && delSampler) {
-			auto sampler = textureSampler;
-			deletionQueue.emplace([sampler] { vkDestroySampler(*VulkanDevice::get(), sampler, nullptr); });
-			textureSampler = nullptr;
-		}
+	/*	if(textureSampler && delSampler) {
+		                auto sampler = textureSampler;
+		                deletionQueue.emplace([sampler] { vkDestroySampler(*VulkanDevice::get(), sampler, nullptr); });
+		                textureSampler = nullptr;
+		        }*/
 
 		if(textureImageView) {
 			auto imageView = textureImageView;
@@ -1406,5 +1443,4 @@ namespace maple
 			VulkanHelper::setObjectName("ImageView:" + name + "_" + std::to_string(i), (uint64_t)imageViews[i], VK_OBJECT_TYPE_IMAGE_VIEW);
 		}
 	}
-
 }; // namespace maple

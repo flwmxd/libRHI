@@ -385,17 +385,17 @@ namespace maple
 		return std::make_shared<VKImGuiRenderer>(width, height, clearScreen);
 	}
 
-	auto Sampler::create(TextureFilter filter, TextureWrap wrapU, TextureWrap wrapV,float maxAnisotropy) -> Sampler::Ptr 
+	auto Sampler::create(TextureFilter filter, TextureWrap wrapU, TextureWrap wrapV, float maxAnisotropy, uint32_t mipmap) -> Sampler::Ptr 
 	{
 		size_t hash = 0;
-		hash::hashCode(hash, (uint32_t)filter, (uint32_t)wrapU, (uint32_t)wrapV,  maxAnisotropy);
+		hash::hashCode(hash, (uint32_t)filter, (uint32_t)wrapU, (uint32_t)wrapV, maxAnisotropy, mipmap);
 		auto& cache = GraphicsContext::get()->getSamplerCache();
 
 		if(auto iter = cache.find(hash); iter != cache.end()) { return iter->second; }
 
 		return cache.emplace(std::piecewise_construct, 
 			std::forward_as_tuple(hash),
-		             std::forward_as_tuple(std::make_shared<VulkanSampler>(filter, wrapU, wrapV, maxAnisotropy))
+		             std::forward_as_tuple(std::make_shared<VulkanSampler>(filter, wrapU, wrapV, maxAnisotropy, mipmap))
 		).first->second;
 	}
 } // namespace maple

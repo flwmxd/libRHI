@@ -26,7 +26,9 @@ namespace maple
 		VulkanTexture2D();
 		~VulkanTexture2D();
 
-		auto update(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const void *buffer) -> void override;
+		auto update(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const void *buffer, bool mipmap =false) -> void override;
+
+		auto copyImage(const CommandBuffer *comd, uint8_t *out) -> void override;
 
 		inline auto bind(uint32_t slot = 0) const -> void override{};
 		inline auto unbind(uint32_t slot = 0) const -> void override{};
