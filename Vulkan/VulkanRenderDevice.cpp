@@ -18,7 +18,7 @@
 
 namespace maple
 {
-	static constexpr uint32_t MAX_DESCRIPTOR_SET_COUNT = 3000;
+	static constexpr uint32_t MAX_DESCRIPTOR_SET_COUNT = 30000;
 
 	namespace
 	{
@@ -111,12 +111,12 @@ namespace maple
 	{
 		PROFILE_FUNCTION();
 
-		std::vector<DescriptorPoolInfo> poolInfos = { {DescriptorType::Image, 500},
-													 {DescriptorType::ImageSampler, 500},
-													 {DescriptorType::Buffer, 500},
-													 {DescriptorType::BufferDynamic, 500},
-													 {DescriptorType::UniformBuffer, 500},
-													 {DescriptorType::UniformBufferDynamic, 500} };
+		std::vector<DescriptorPoolInfo> poolInfos = { {DescriptorType::Image, 5000},
+													 {DescriptorType::ImageSampler, 5000},
+													 {DescriptorType::Buffer, 5000},
+													 {DescriptorType::BufferDynamic, 5000},
+													 {DescriptorType::UniformBuffer, 5000},
+													 {DescriptorType::UniformBufferDynamic, 5000} };
 
 		if (VulkanDevice::get()->getPhysicalDevice()->isRaytracingSupported())
 		{

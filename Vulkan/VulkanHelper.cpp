@@ -950,7 +950,9 @@ namespace maple
 			case TextureWrap::ClampToEdge: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 			case TextureWrap::Repeat: return VK_SAMPLER_ADDRESS_MODE_REPEAT;
 			case TextureWrap::MirroredRepeat: return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-			default: LOGC("[Texture] Unsupported wrap type!"); return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+			default: 
+				LOGC("[Texture] Unsupported wrap type!"); 
+				return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 			}
 		}
 		auto drawTypeToTopology(DrawType type) -> VkPrimitiveTopology
