@@ -25,8 +25,6 @@ namespace maple
 		auto alignedDynamicUboSize(size_t size) const -> size_t override;
 
 		auto immediateSubmit(const std::function<void(CommandBuffer *)> &execute) -> void override;
-		auto createOnceCommandBuffer()->std::shared_ptr<CommandBuffer> override;
-		auto submitOnceCommandBuffer(std::shared_ptr<CommandBuffer>) -> void override;
 
 		auto isRaytracingSupported() -> bool override;
 
@@ -99,7 +97,5 @@ namespace maple
 		VkDebugUtilsMessengerEXT debugMessenger;
 
 		std::unordered_map<size_t, std::shared_ptr<UniformBuffer>> uniformBuffer;
-
-		std::unique_ptr<VulkanFence> updateFence;
 	};
 };        // namespace maple

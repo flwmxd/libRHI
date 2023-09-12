@@ -357,10 +357,7 @@ namespace maple
 
 	auto VulkanContext::immediateSubmit(const std::function<void(CommandBuffer *)> &execute) -> void
 	{
-		if (updateFence == nullptr)
-		{
-			updateFence = std::make_unique<VulkanFence>();
-		}
+		auto updateFence = std::make_unique<VulkanFence>();
 
 		auto cmd   = CommandBuffer::create();
 		auto vkCmd = std::static_pointer_cast<VulkanCommandBuffer>(cmd);
@@ -380,39 +377,6 @@ namespace maple
 		submitInfo.waitSemaphoreCount   = 0;
 
 		VK_CHECK_RESULT(vkQueueSubmit(VulkanDevice::get()->getGraphicsQueue(), 1, &submitInfo, updateFence->getHandle()));
-		updateFence->waitAndReset();
+		updateFence->wait();
 	}
-
-	auto VulkanContext::createOnceCommandBuffer() ->std::shared_ptr<CommandBuffer>
-	{
-		auto cmd = CommandBuffer::create();
-		auto vkCmd = std::static_pointer_cast<VulkanCommandBuffer>(cmd);
-		cmd->init(true);
-		cmd->beginRecording();
-		return cmd;
-	}
-
-	auto VulkanContext::submitOnceCommandBuffer(std::shared_ptr<CommandBuffer> cmd) -> void
-	{
-		if (updateFence == nullptr)
-		{
-			updateFence = std::make_unique<VulkanFence>();
-		}
-		auto vkCmd = std::static_pointer_cast<VulkanCommandBuffer>(cmd);
-		cmd->endRecording();
-		auto         cmdAddress = vkCmd->getCommandBuffer();
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &cmdAddress;
-		submitInfo.pSignalSemaphores = nullptr;
-		submitInfo.pNext = nullptr;
-		submitInfo.pWaitDstStageMask = nullptr;
-		submitInfo.signalSemaphoreCount = 0;
-		submitInfo.waitSemaphoreCount = 0;
-
-		VK_CHECK_RESULT(vkQueueSubmit(VulkanDevice::get()->getGraphicsQueue(), 1, &submitInfo, updateFence->getHandle()));
-		updateFence->waitAndReset();
-	}
-
 }        // namespace maple

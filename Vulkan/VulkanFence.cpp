@@ -56,7 +56,7 @@ namespace maple
 		PROFILE_FUNCTION();
 		MAPLE_ASSERT(!signaled, "Fence Signaled");
 
-		const VkResult result = vkWaitForFences(*VulkanDevice::get(), 1, &handle, true, 1000000000);
+		const VkResult result = vkWaitForFences(*VulkanDevice::get(), 1, &handle, true, UINT64_MAX);
 
 		VK_CHECK_RESULT(result);
 		if (result == VK_SUCCESS)
