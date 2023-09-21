@@ -73,10 +73,22 @@ namespace maple
 	enum class BlendMode : int32_t
 	{
 		None = 0,
-		OneZero,
-		ZeroSrcColor,
-		SrcAlphaOneMinusSrcAlpha,
-		Add
+		/*	OneZero,
+		        ZeroSrcColor,
+		        SrcAlphaOneMinusSrcAlpha,
+		        Add,*/
+		
+		Zero,
+		One,
+		SrcColor,
+		OneMinusSrcColor,
+		SrcAlpha,
+		OneMinusSrcAlpha,
+		DstAlpha,
+		OneMinusDstAlpha,
+		DstColor,
+		OneMinusDstColor,
+		SrcAlphaSaturate,
 	};
 
 	enum class TextureWrap : int32_t
@@ -379,6 +391,7 @@ namespace maple
 		PolygonMode polygonMode = PolygonMode::Fill;
 		DrawType    drawType = DrawType::Triangle;
 		BlendMode   blendMode = BlendMode::None;
+		BlendMode   dstBlendMode = BlendMode::None;
 		maple::vec4   clearColor = { 0.2f, 0.2f, 0.2f, 1.0 };
 
 		std::shared_ptr<Texture> depthTarget = nullptr;

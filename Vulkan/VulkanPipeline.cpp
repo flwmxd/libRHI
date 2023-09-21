@@ -3,48 +3,60 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include "VulkanPipeline.h"
+#include "../Console.h"
 #include "VulkanCommandBuffer.h"
 #include "VulkanContext.h"
 #include "VulkanDescriptorSet.h"
 #include "VulkanDevice.h"
 #include "VulkanFrameBuffer.h"
+#include "VulkanRenderDevice.h"
 #include "VulkanRenderPass.h"
 #include "VulkanShader.h"
 #include "VulkanStorageBuffer.h"
 #include "VulkanSwapChain.h"
 #include "VulkanTexture.h"
-#include "VulkanRenderDevice.h"
-#include "../Console.h"
 #include <memory>
 
 namespace maple
 {
 	namespace
 	{
+
+		inline auto convertBlend(BlendMode mode)
+		{
+			switch(mode) {
+			case maple::BlendMode::None: MAPLE_ASSERT(false, "Unsupported"); break;
+			case maple::BlendMode::Zero: return VK_BLEND_FACTOR_ZERO;
+			case maple::BlendMode::One: return VK_BLEND_FACTOR_ONE;
+			case maple::BlendMode::SrcColor: return VK_BLEND_FACTOR_SRC_COLOR;
+			case maple::BlendMode::OneMinusSrcColor: return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+			case maple::BlendMode::SrcAlpha: return VK_BLEND_FACTOR_SRC_ALPHA;
+			case maple::BlendMode::OneMinusSrcAlpha: return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+			case maple::BlendMode::DstAlpha: return VK_BLEND_FACTOR_DST_ALPHA;
+			case maple::BlendMode::OneMinusDstAlpha: return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+			case maple::BlendMode::DstColor: return VK_BLEND_FACTOR_DST_COLOR;
+			case maple::BlendMode::OneMinusDstColor: return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+			case maple::BlendMode::SrcAlphaSaturate: return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+			default: break;
+			}
+			MAPLE_ASSERT(false, "Unsupported");
+			return VK_BLEND_FACTOR_ZERO;
+		}
+
 		inline auto convertCompareOp(StencilType type)
 		{
-			switch (type)
-			{
-			case maple::StencilType::Equal:
-				return VK_COMPARE_OP_EQUAL;
-			case maple::StencilType::Notequal:
-				return VK_COMPARE_OP_NOT_EQUAL;
-			case maple::StencilType::Always:
-				return VK_COMPARE_OP_ALWAYS;
-			case StencilType::Never:
-				return VK_COMPARE_OP_NEVER;
-			case StencilType::Less:
-				return VK_COMPARE_OP_LESS;
-			case StencilType::LessOrEqual:
-				return VK_COMPARE_OP_LESS_OR_EQUAL;
-			case StencilType::Greater:
-				return VK_COMPARE_OP_GREATER;
-			case StencilType::GreaterOrEqual:
-				return VK_COMPARE_OP_GREATER_OR_EQUAL;
+			switch(type) {
+			case maple::StencilType::Equal: return VK_COMPARE_OP_EQUAL;
+			case maple::StencilType::Notequal: return VK_COMPARE_OP_NOT_EQUAL;
+			case maple::StencilType::Always: return VK_COMPARE_OP_ALWAYS;
+			case StencilType::Never: return VK_COMPARE_OP_NEVER;
+			case StencilType::Less: return VK_COMPARE_OP_LESS;
+			case StencilType::LessOrEqual: return VK_COMPARE_OP_LESS_OR_EQUAL;
+			case StencilType::Greater: return VK_COMPARE_OP_GREATER;
+			case StencilType::GreaterOrEqual: return VK_COMPARE_OP_GREATER_OR_EQUAL;
 			case maple::StencilType::Keep:
 			case maple::StencilType::Replace:
-			case maple::StencilType::Zero:
-				throw std::logic_error("Compare Op should not be Keep/Replace/Zero");
+			case maple::StencilType::Zero: throw std::logic_error("Compare Op should not be Keep/Replace/Zero");
 			}
 
 			return VK_COMPARE_OP_LESS_OR_EQUAL;
@@ -52,19 +64,15 @@ namespace maple
 
 		inline auto convertStencilOp(StencilType type)
 		{
-			switch (type)
-			{
-			case maple::StencilType::Keep:
-				return VK_STENCIL_OP_KEEP;
-			case maple::StencilType::Replace:
-				return VK_STENCIL_OP_REPLACE;
-			case maple::StencilType::Zero:
-				return VK_STENCIL_OP_ZERO;
+			switch(type) {
+			case maple::StencilType::Keep: return VK_STENCIL_OP_KEEP;
+			case maple::StencilType::Replace: return VK_STENCIL_OP_REPLACE;
+			case maple::StencilType::Zero: return VK_STENCIL_OP_ZERO;
 			}
 			throw std::logic_error("Compare Op should be Keep/Replace/Zero");
 		}
 
-		inline auto createDepthStencil(VkPipelineDepthStencilStateCreateInfo& ds, const PipelineInfo& info) -> void
+		inline auto createDepthStencil(VkPipelineDepthStencilStateCreateInfo &ds, const PipelineInfo &info) -> void
 		{
 			ds.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 			ds.pNext = NULL;
@@ -87,7 +95,7 @@ namespace maple
 			ds.front = ds.back;
 		}
 
-		inline auto createMultisample(VkPipelineMultisampleStateCreateInfo& ms) -> void
+		inline auto createMultisample(VkPipelineMultisampleStateCreateInfo &ms) -> void
 		{
 			ms.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 			ms.pNext = NULL;
@@ -99,13 +107,14 @@ namespace maple
 			ms.minSampleShading = 0.0;
 		}
 
-		inline auto createVertexLayout(VkVertexInputBindingDescription& vertexBindingDescription, VkPipelineVertexInputStateCreateInfo& vi, std::shared_ptr<VulkanShader> vkShader) -> void
+		inline auto createVertexLayout(VkVertexInputBindingDescription &vertexBindingDescription, VkPipelineVertexInputStateCreateInfo &vi,
+		                               std::shared_ptr<VulkanShader> vkShader) -> void
 		{
 			vertexBindingDescription.binding = 0;
 			vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 			vertexBindingDescription.stride = vkShader->getVertexInputStride();
 
-			auto& vertexInputAttributeDescription = vkShader->getVertexInputAttributeDescription();
+			auto &vertexInputAttributeDescription = vkShader->getVertexInputAttributeDescription();
 
 			vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 			vi.pNext = NULL;
@@ -115,7 +124,8 @@ namespace maple
 			vi.pVertexAttributeDescriptions = vertexInputAttributeDescription.data();
 		}
 
-		inline auto createRasterization(VkPipelineInputAssemblyStateCreateInfo& inputAssemblyCI, VkPipelineRasterizationStateCreateInfo& rs, const PipelineInfo& info) -> void
+		inline auto createRasterization(VkPipelineInputAssemblyStateCreateInfo &inputAssemblyCI, VkPipelineRasterizationStateCreateInfo &rs,
+		                                const PipelineInfo &info) -> void
 		{
 			inputAssemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 			inputAssemblyCI.pNext = NULL;
@@ -126,10 +136,11 @@ namespace maple
 			rs.polygonMode = VkConverter::polygonModeToVk(info.polygonMode);
 			rs.cullMode = VkConverter::cullModeToVk(info.cullMode);
 
-			//TODO there is a bug here.
-			//because vulkan Y axis is up to down and different with opengl
-			//http://anki3d.org/vulkan-coordinate-system/
-			rs.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;////info.flipY && info.swapChainTarget ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE;
+			// TODO there is a bug here.
+			// because vulkan Y axis is up to down and different with opengl
+			// http://anki3d.org/vulkan-coordinate-system/
+			rs.frontFace =
+			    VK_FRONT_FACE_COUNTER_CLOCKWISE; ////info.flipY && info.swapChainTarget ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
 			rs.depthClampEnable = VK_FALSE;
 			rs.rasterizerDiscardEnable = VK_FALSE;
@@ -141,59 +152,23 @@ namespace maple
 			rs.pNext = NULL;
 		}
 
-		inline auto createColorBlend(VkPipelineColorBlendStateCreateInfo& cb, std::vector<VkPipelineColorBlendAttachmentState>& blendAttachState, const PipelineInfo& info, std::shared_ptr<VulkanRenderPass> renderPass) -> void
+		inline auto createColorBlend(VkPipelineColorBlendStateCreateInfo &cb, std::vector<VkPipelineColorBlendAttachmentState> &blendAttachState,
+		                             const PipelineInfo &info, std::shared_ptr<VulkanRenderPass> renderPass) -> void
 		{
 			blendAttachState.resize(renderPass->getColorAttachmentCount());
 			cb.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 			cb.pNext = NULL;
 			cb.flags = 0;
-			for (unsigned int i = 0; i < blendAttachState.size(); i++)
-			{
+			for(unsigned int i = 0; i < blendAttachState.size(); i++) {
 				blendAttachState[i] = VkPipelineColorBlendAttachmentState();
 				blendAttachState[i].colorWriteMask = 0x0f;
 				blendAttachState[i].alphaBlendOp = VK_BLEND_OP_ADD;
 				blendAttachState[i].colorBlendOp = VK_BLEND_OP_ADD;
-
-				if (info.transparencyEnabled)
-				{
-					blendAttachState[i].blendEnable = VK_TRUE;
-					blendAttachState[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-					blendAttachState[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-
-					if (info.blendMode == BlendMode::SrcAlphaOneMinusSrcAlpha)
-					{
-						blendAttachState[i].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-						blendAttachState[i].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-					}
-					else if (info.blendMode == BlendMode::ZeroSrcColor)
-					{
-						blendAttachState[i].srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-						blendAttachState[i].dstColorBlendFactor = VK_BLEND_FACTOR_SRC_COLOR;
-					}
-					else if (info.blendMode == BlendMode::OneZero)
-					{
-						blendAttachState[i].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-						blendAttachState[i].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-					}
-					else if (info.blendMode == BlendMode::Add)
-					{
-						blendAttachState[i].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-						blendAttachState[i].dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
-					}
-					else
-					{
-						blendAttachState[i].srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-						blendAttachState[i].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-					}
-				}
-				else
-				{
-					blendAttachState[i].blendEnable = VK_FALSE;
-					blendAttachState[i].srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-					blendAttachState[i].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-					blendAttachState[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-					blendAttachState[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-				}
+				blendAttachState[i].blendEnable = info.transparencyEnabled;
+				blendAttachState[i].srcAlphaBlendFactor = convertBlend(info.blendMode);
+				blendAttachState[i].dstAlphaBlendFactor = convertBlend(info.dstBlendMode);
+				blendAttachState[i].srcColorBlendFactor = convertBlend(info.blendMode);
+				blendAttachState[i].dstColorBlendFactor = convertBlend(info.dstBlendMode);
 			}
 
 			cb.attachmentCount = static_cast<uint32_t>(blendAttachState.size());
@@ -206,7 +181,7 @@ namespace maple
 			cb.blendConstants[3] = 1.0f;
 		}
 
-		inline auto createViewport(VkPipelineViewportStateCreateInfo& vp, std::vector<VkDynamicState>& dynamicState) -> void
+		inline auto createViewport(VkPipelineViewportStateCreateInfo &vp, std::vector<VkDynamicState> &dynamicState) -> void
 		{
 			vp.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 			vp.pNext = NULL;
@@ -218,22 +193,19 @@ namespace maple
 			dynamicState.emplace_back(VK_DYNAMIC_STATE_SCISSOR);
 		}
 
-	}        // namespace
+	} // namespace
 
-	VulkanPipeline::VulkanPipeline(const PipelineInfo& info)
-	{
-		init(info);
-	}
+	VulkanPipeline::VulkanPipeline(const PipelineInfo &info) { init(info); }
 
 	VulkanPipeline::~VulkanPipeline()
 	{
 		PROFILE_FUNCTION();
-		auto& deletionQueue = VulkanContext::getDeletionQueue();
-		auto  pipeline = this->pipeline;
+		auto &deletionQueue = VulkanContext::getDeletionQueue();
+		auto pipeline = this->pipeline;
 		deletionQueue.emplace([pipeline] { vkDestroyPipeline(*VulkanDevice::get(), pipeline, VK_NULL_HANDLE); });
 	}
 
-	auto VulkanPipeline::init(const PipelineInfo& info) -> bool
+	auto VulkanPipeline::init(const PipelineInfo &info) -> bool
 	{
 		PROFILE_FUNCTION();
 		shader = info.shader;
@@ -245,14 +217,14 @@ namespace maple
 		transitionAttachments();
 		createFrameBuffers();
 		// Pipeline
-		std::vector<VkDynamicState>      dynamicStateDescriptors;
+		std::vector<VkDynamicState> dynamicStateDescriptors;
 		VkPipelineDynamicStateCreateInfo dynamicStateCI{};
 		dynamicStateCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 		dynamicStateCI.pNext = NULL;
 		dynamicStateCI.pDynamicStates = dynamicStateDescriptors.data();
 
 		// Vertex layout
-		VkVertexInputBindingDescription      vertexBindingDescription{};
+		VkVertexInputBindingDescription vertexBindingDescription{};
 		VkPipelineVertexInputStateCreateInfo vi{};
 		createVertexLayout(vertexBindingDescription, vi, vkShader);
 
@@ -260,22 +232,19 @@ namespace maple
 		VkPipelineRasterizationStateCreateInfo rs{};
 		createRasterization(inputAssemblyCI, rs, info);
 
-		VkPipelineColorBlendStateCreateInfo              cb{};
+		VkPipelineColorBlendStateCreateInfo cb{};
 		std::vector<VkPipelineColorBlendAttachmentState> blendAttachState;
 		createColorBlend(cb, blendAttachState, info, std::static_pointer_cast<VulkanRenderPass>(renderPass));
 
 		VkPipelineViewportStateCreateInfo vp{};
 		createViewport(vp, dynamicStateDescriptors);
 
-		if (info.depthBiasEnabled)
-		{
+		if(info.depthBiasEnabled) {
 			dynamicStateDescriptors.emplace_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
 			depthBiasConstant = 1.25f;
 			depthBiasSlope = 1.75f;
 			depthBiasEnabled = true;
-		}
-		else
-		{
+		} else {
 			depthBiasConstant = 0.f;
 			depthBiasSlope = 0.f;
 			depthBiasEnabled = false;
@@ -309,7 +278,8 @@ namespace maple
 		graphicsPipelineCreateInfo.renderPass = *std::static_pointer_cast<VulkanRenderPass>(renderPass);
 		graphicsPipelineCreateInfo.subpass = 0;
 
-		VK_CHECK_RESULT(vkCreateGraphicsPipelines(*VulkanDevice::get(), VulkanDevice::get()->getPipelineCache(), 1, &graphicsPipelineCreateInfo, VK_NULL_HANDLE, &pipeline));
+		VK_CHECK_RESULT(vkCreateGraphicsPipelines(*VulkanDevice::get(), VulkanDevice::get()->getPipelineCache(), 1, &graphicsPipelineCreateInfo,
+		                                          VK_NULL_HANDLE, &pipeline));
 
 		VulkanHelper::setObjectName(info.pipelineName, (uint64_t)pipeline, VK_OBJECT_TYPE_PIPELINE);
 
@@ -318,18 +288,12 @@ namespace maple
 
 	auto VulkanPipeline::getWidth() -> uint32_t
 	{
-		if (description.swapChainTarget)
-		{
-			return GraphicsContext::get()->getSwapChain()->getCurrentImage()->getWidth();
-		}
-		if (description.colorTargets[0])
-			return description.colorTargets[0]->getWidth();
+		if(description.swapChainTarget) { return GraphicsContext::get()->getSwapChain()->getCurrentImage()->getWidth(); }
+		if(description.colorTargets[0]) return description.colorTargets[0]->getWidth();
 
-		if (description.depthTarget)
-			return description.depthTarget->getWidth();
+		if(description.depthTarget) return description.depthTarget->getWidth();
 
-		if (description.depthArrayTarget)
-			return description.depthArrayTarget->getWidth();
+		if(description.depthArrayTarget) return description.depthArrayTarget->getWidth();
 
 		LOGW("Invalid pipeline width");
 
@@ -338,193 +302,154 @@ namespace maple
 
 	auto VulkanPipeline::getHeight() -> uint32_t
 	{
-		if (description.swapChainTarget)
-		{
-			return GraphicsContext::get()->getSwapChain()->getCurrentImage()->getHeight();
-		}
-		if (description.colorTargets[0])
-			return description.colorTargets[0]->getHeight();
+		if(description.swapChainTarget) { return GraphicsContext::get()->getSwapChain()->getCurrentImage()->getHeight(); }
+		if(description.colorTargets[0]) return description.colorTargets[0]->getHeight();
 
-		if (description.depthTarget)
-			return description.depthTarget->getHeight();
+		if(description.depthTarget) return description.depthTarget->getHeight();
 
-		if (description.depthArrayTarget)
-			return description.depthArrayTarget->getHeight();
+		if(description.depthArrayTarget) return description.depthArrayTarget->getHeight();
 
 		LOGW("Invalid pipeline height");
 
 		return 0;
 	}
 
-	auto VulkanPipeline::beginSecondary(const CommandBuffer* commandBuffer, uint32_t layer /*= 0*/, int32_t cubeFace /*= -1*/, int32_t mipMapLevel /*= 0*/) -> void
+	auto VulkanPipeline::beginSecondary(const CommandBuffer *commandBuffer, uint32_t layer /*= 0*/, int32_t cubeFace /*= -1*/, int32_t mipMapLevel /*= 0*/)
+	    -> void
 	{
 		auto mipScale = std::pow(0.5, mipMapLevel);
-		FrameBuffer* framebuffer = nullptr;
+		FrameBuffer *framebuffer = nullptr;
 		transitionAttachments();
-		if (description.swapChainTarget)
-		{
+		if(description.swapChainTarget) {
 			framebuffer = framebuffers[VulkanContext::get()->getSwapChain()->getCurrentImageIndex()].get();
-		}
-		else if (description.depthArrayTarget)
-		{
+		} else if(description.depthArrayTarget) {
 			framebuffer = framebuffers[layer].get();
-		}
-		else
-		{
+		} else {
 			framebuffer = framebuffers[0].get();
 		}
-		renderPass->beginRenderPass(commandBuffer, (float*)&description.clearColor, framebuffer, SubPassContents::Secondary, getWidth() * mipScale, getHeight() * mipScale, cubeFace, mipMapLevel);
+		renderPass->beginRenderPass(commandBuffer, (float *)&description.clearColor, framebuffer, SubPassContents::Secondary, getWidth() * mipScale,
+		                            getHeight() * mipScale, cubeFace, mipMapLevel);
 	}
 
-	auto VulkanPipeline::bind(const CommandBuffer* cmdBuffer, uint32_t layer, int32_t cubeFace, int32_t mipMapLevel) -> FrameBuffer*
+	auto VulkanPipeline::bind(const CommandBuffer *cmdBuffer, uint32_t layer, int32_t cubeFace, int32_t mipMapLevel) -> FrameBuffer *
 	{
 		PROFILE_FUNCTION();
-		FrameBuffer* framebuffer = nullptr;
+		FrameBuffer *framebuffer = nullptr;
 		transitionAttachments();
 
-		if (depthBiasEnabled)
-			vkCmdSetDepthBias(static_cast<const VulkanCommandBuffer*>(cmdBuffer)->getCommandBuffer(), depthBiasConstant, 0.0f, depthBiasSlope);
+		if(depthBiasEnabled)
+			vkCmdSetDepthBias(static_cast<const VulkanCommandBuffer *>(cmdBuffer)->getCommandBuffer(), depthBiasConstant, 0.0f, depthBiasSlope);
 
-		if (description.swapChainTarget)
-		{
+		if(description.swapChainTarget) {
 			framebuffer = framebuffers[VulkanContext::get()->getSwapChain()->getCurrentImageIndex()].get();
-		}
-		else if (description.depthArrayTarget)
-		{
+		} else if(description.depthArrayTarget) {
 			framebuffer = framebuffers[layer].get();
-		}
-		else
-		{
+		} else {
 			framebuffer = framebuffers[0].get();
 		}
 
 		auto mipScale = std::pow(0.5, mipMapLevel);
-		if (!cmdBuffer->isSecondary())
-		{
-			renderPass->beginRenderPass(cmdBuffer, (float*)&description.clearColor, framebuffer, SubPassContents::Inline, getWidth() * mipScale, getHeight() * mipScale, cubeFace, mipMapLevel);
-		}
-		else 
-		{
+		if(!cmdBuffer->isSecondary()) {
+			renderPass->beginRenderPass(cmdBuffer, (float *)&description.clearColor, framebuffer, SubPassContents::Inline, getWidth() * mipScale,
+			                            getHeight() * mipScale, cubeFace, mipMapLevel);
+		} else {
 			cmdBuffer->updateViewport(getWidth() * mipScale, getHeight() * mipScale);
 		}
 
-		vkCmdBindPipeline(static_cast<const VulkanCommandBuffer*>(cmdBuffer)->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+		vkCmdBindPipeline(static_cast<const VulkanCommandBuffer *>(cmdBuffer)->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 		return framebuffer;
 	}
 
-	auto VulkanPipeline::bind(const CommandBuffer* cmdBuffer, const ivec4& viewport) -> FrameBuffer*
+	auto VulkanPipeline::bind(const CommandBuffer *cmdBuffer, const ivec4 &viewport) -> FrameBuffer *
 	{
 		PROFILE_FUNCTION();
-		FrameBuffer* framebuffer = nullptr;
+		FrameBuffer *framebuffer = nullptr;
 		transitionAttachments();
 
-		//if (depthBiasEnabled)
-		vkCmdSetDepthBias(static_cast<const VulkanCommandBuffer*>(cmdBuffer)->getCommandBuffer(), depthBiasConstant, 0.0f, depthBiasSlope);
+		// if (depthBiasEnabled)
+		vkCmdSetDepthBias(static_cast<const VulkanCommandBuffer *>(cmdBuffer)->getCommandBuffer(), depthBiasConstant, 0.0f, depthBiasSlope);
 
-		if (description.swapChainTarget)
-		{
+		if(description.swapChainTarget) {
 			framebuffer = framebuffers[VulkanContext::get()->getSwapChain()->getCurrentImageIndex()].get();
-		}
-		else
-		{
+		} else {
 			framebuffer = framebuffers[0].get();
 		}
-		if (!cmdBuffer->isSecondary())
-			renderPass->beginRenderPass(cmdBuffer, (float*)&description.clearColor, framebuffer, SubPassContents::Inline, getWidth(), getHeight(), (int32_t*)&viewport);
-		vkCmdBindPipeline(static_cast<const VulkanCommandBuffer*>(cmdBuffer)->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+		if(!cmdBuffer->isSecondary())
+			renderPass->beginRenderPass(cmdBuffer, (float *)&description.clearColor, framebuffer, SubPassContents::Inline, getWidth(), getHeight(),
+			                            (int32_t *)&viewport);
+		vkCmdBindPipeline(static_cast<const VulkanCommandBuffer *>(cmdBuffer)->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 		return framebuffer;
 	}
 
-	auto VulkanPipeline::end(const CommandBuffer* commandBuffer) -> void
+	auto VulkanPipeline::end(const CommandBuffer *commandBuffer) -> void
 	{
 		PROFILE_FUNCTION();
-		if (!commandBuffer->isSecondary())
-			renderPass->endRenderPass(commandBuffer);
+		if(!commandBuffer->isSecondary()) renderPass->endRenderPass(commandBuffer);
 	}
 
-	auto VulkanPipeline::clearRenderTargets(const CommandBuffer* commandBuffer) -> void
+	auto VulkanPipeline::clearRenderTargets(const CommandBuffer *commandBuffer) -> void
 	{
 		PROFILE_FUNCTION();
-		if (description.swapChainTarget)
-		{
-			for (uint32_t i = 0; i < GraphicsContext::get()->getSwapChain()->getSwapChainBufferCount(); i++)
-			{
+		if(description.swapChainTarget) {
+			for(uint32_t i = 0; i < GraphicsContext::get()->getSwapChain()->getSwapChainBufferCount(); i++) {
 				RenderDevice::get()->clearRenderTarget(GraphicsContext::get()->getSwapChain()->getImage(i), commandBuffer);
 			}
 		}
 
-		if (description.depthArrayTarget)
-		{
-			RenderDevice::get()->clearRenderTarget(description.depthArrayTarget, commandBuffer);
-		}
+		if(description.depthArrayTarget) { RenderDevice::get()->clearRenderTarget(description.depthArrayTarget, commandBuffer); }
 
-		if (description.depthTarget)
-		{
-			RenderDevice::get()->clearRenderTarget(description.depthTarget, commandBuffer);
-		}
+		if(description.depthTarget) { RenderDevice::get()->clearRenderTarget(description.depthTarget, commandBuffer); }
 
-		for (auto texture : description.colorTargets)
-		{
-			if (texture != nullptr)
-			{
-				RenderDevice::get()->clearRenderTarget(texture, commandBuffer);
-			}
+		for(auto texture : description.colorTargets) {
+			if(texture != nullptr) { RenderDevice::get()->clearRenderTarget(texture, commandBuffer); }
 		}
 	}
 
-	auto VulkanPipeline::getRenderPass() ->std::shared_ptr<RenderPass>
-	{
-		return renderPass;
-	}
+	auto VulkanPipeline::getRenderPass() -> std::shared_ptr<RenderPass> { return renderPass; }
 
-	auto VulkanPipeline::getFrameBuffer() ->std::shared_ptr<FrameBuffer>
+	auto VulkanPipeline::getFrameBuffer() -> std::shared_ptr<FrameBuffer>
 	{
-		if (description.swapChainTarget)
-		{
+		if(description.swapChainTarget) {
 			return framebuffers[VulkanContext::get()->getSwapChain()->getCurrentImageIndex()];
-		}
-		else
-		{
+		} else {
 			return framebuffers[0];
 		}
 	}
 
-	auto VulkanPipeline::dispatchIndirect(const CommandBuffer* cmdBuffer, const StorageBuffer* ssbo, uint64_t offset) -> void
+	auto VulkanPipeline::dispatchIndirect(const CommandBuffer *cmdBuffer, const StorageBuffer *ssbo, uint64_t offset) -> void
 	{
-		auto vkCmd = static_cast<const VulkanCommandBuffer*>(cmdBuffer);
-		auto vkBuffer = static_cast<const VulkanStorageBuffer*>(ssbo);
+		auto vkCmd = static_cast<const VulkanCommandBuffer *>(cmdBuffer);
+		auto vkBuffer = static_cast<const VulkanStorageBuffer *>(ssbo);
 		vkCmdDispatchIndirect(vkCmd->getCommandBuffer(), vkBuffer->getHandle(), offset);
 	}
 
-	auto VulkanPipeline::drawIndexedIndirect(const CommandBuffer* cmdBuffer, const StorageBuffer* ssbo, uint32_t drawCount, uint32_t stride, uint64_t offset /*= 0*/) -> void
+	auto VulkanPipeline::drawIndexedIndirect(const CommandBuffer *cmdBuffer, const StorageBuffer *ssbo, uint32_t drawCount, uint32_t stride,
+	                                         uint64_t offset /*= 0*/) -> void
 	{
-		auto vkCmd = static_cast<const VulkanCommandBuffer*>(cmdBuffer);
-		auto vkBuffer = static_cast<const VulkanStorageBuffer*>(ssbo);
+		auto vkCmd = static_cast<const VulkanCommandBuffer *>(cmdBuffer);
+		auto vkBuffer = static_cast<const VulkanStorageBuffer *>(ssbo);
 		vkCmdDrawIndexedIndirect(vkCmd->getCommandBuffer(), vkBuffer->getHandle(), offset, drawCount, stride);
 	}
 
-	auto VulkanPipeline::drawIndexed(const CommandBuffer* cmdBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) -> void
+	auto VulkanPipeline::drawIndexed(const CommandBuffer *cmdBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset,
+	                                 uint32_t firstInstance) -> void
 	{
-		auto vkCmd = static_cast<const VulkanCommandBuffer*>(cmdBuffer);
+		auto vkCmd = static_cast<const VulkanCommandBuffer *>(cmdBuffer);
 		vkCmdDrawIndexed(vkCmd->getCommandBuffer(), indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 
-	auto VulkanPipeline::bufferBarrier(const CommandBuffer* commandBuffer, const std::vector<std::shared_ptr<StorageBuffer>>& buffers, bool read) -> void
+	auto VulkanPipeline::bufferBarrier(const CommandBuffer *commandBuffer, const std::vector<std::shared_ptr<StorageBuffer>> &buffers, bool read) -> void
 	{
-		auto                               vkCmd = static_cast<const VulkanCommandBuffer*>(commandBuffer);
+		auto vkCmd = static_cast<const VulkanCommandBuffer *>(commandBuffer);
 		std::vector<VkBufferMemoryBarrier> bufferBarriers;
-		for (auto& ssbo : buffers)
-		{
-			auto                  vkBuffer = static_cast<VulkanStorageBuffer*>(ssbo.get());
+		for(auto &ssbo : buffers) {
+			auto vkBuffer = static_cast<VulkanStorageBuffer *>(ssbo.get());
 			VkBufferMemoryBarrier memoryBarrier{};
 
 			uint32_t srcAccessFlags = vkBuffer->getAccessFlagBits();
 			uint32_t dstAccessFlags = read ? VK_ACCESS_SHADER_READ_BIT : VK_ACCESS_SHADER_WRITE_BIT;
 
-			if (vkBuffer->isIndirect() && read)
-			{
-				dstAccessFlags = dstAccessFlags | VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
-			}
+			if(vkBuffer->isIndirect() && read) { dstAccessFlags = dstAccessFlags | VK_ACCESS_INDIRECT_COMMAND_READ_BIT; }
 
 			memoryBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
 			memoryBarrier.srcAccessMask = srcAccessFlags;
@@ -537,59 +462,43 @@ namespace maple
 
 			bufferBarriers.emplace_back(memoryBarrier);
 		}
-		//TODO...................
-		vkCmdPipelineBarrier(
-			vkCmd->getCommandBuffer(),
-			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-			0,
-			0,
-			0,
-			bufferBarriers.size(),
-			bufferBarriers.data(),
-			0,
-			0);
+		// TODO...................
+		vkCmdPipelineBarrier(vkCmd->getCommandBuffer(), VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, 0,
+		                     bufferBarriers.size(), bufferBarriers.data(), 0, 0);
 	}
 
 	auto VulkanPipeline::transitionAttachments() -> void
 	{
 		PROFILE_FUNCTION();
 
-		auto commandBuffer = static_cast<VulkanCommandBuffer*>(GraphicsContext::get()->getSwapChain()->getCurrentCommandBuffer());
+		auto commandBuffer = static_cast<VulkanCommandBuffer *>(GraphicsContext::get()->getSwapChain()->getCurrentCommandBuffer());
 		/*if (!commandBuffer->isRecording())
 		{
-			commandBuffer = nullptr;
+		        commandBuffer = nullptr;
 		}*/
 
-		if (description.swapChainTarget)
-		{
-			for (uint32_t i = 0; i < GraphicsContext::get()->getSwapChain()->getSwapChainBufferCount(); i++)
-			{
-				((VulkanTexture2D*)GraphicsContext::get()->getSwapChain()->getImage(i).get())->transitionImage(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, commandBuffer);
+		if(description.swapChainTarget) {
+			for(uint32_t i = 0; i < GraphicsContext::get()->getSwapChain()->getSwapChainBufferCount(); i++) {
+				((VulkanTexture2D *)GraphicsContext::get()->getSwapChain()->getImage(i).get())
+				    ->transitionImage(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, commandBuffer);
 			}
 		}
 
-		if (description.depthArrayTarget)
-		{
-			((VulkanTextureDepthArray*)description.depthArrayTarget.get())->transitionImage(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, commandBuffer);
+		if(description.depthArrayTarget) {
+			((VulkanTextureDepthArray *)description.depthArrayTarget.get())
+			    ->transitionImage(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, commandBuffer);
 		}
 
-		if (description.depthTarget)
-		{
-			((VulkanTextureDepth*)description.depthTarget.get())->transitionImage(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, commandBuffer);
+		if(description.depthTarget) {
+			((VulkanTextureDepth *)description.depthTarget.get())->transitionImage(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, commandBuffer);
 		}
 
-		for (auto texture : description.colorTargets)
-		{
-			if (texture != nullptr)
-			{
-				if (texture->getType() == TextureType::Color)
-				{
-					((VulkanTexture2D*)texture.get())->transitionImage(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, commandBuffer);
-				}
-				else if (texture->getType() == TextureType::Depth)
-				{
-					((VulkanTextureDepth*)texture.get())->transitionImage(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, commandBuffer);
+		for(auto texture : description.colorTargets) {
+			if(texture != nullptr) {
+				if(texture->getType() == TextureType::Color) {
+					((VulkanTexture2D *)texture.get())->transitionImage(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, commandBuffer);
+				} else if(texture->getType() == TextureType::Depth) {
+					((VulkanTextureDepth *)texture.get())->transitionImage(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, commandBuffer);
 				}
 			}
 		}
@@ -599,30 +508,17 @@ namespace maple
 		PROFILE_FUNCTION();
 		std::vector<std::shared_ptr<Texture>> textures;
 
-		if (description.swapChainTarget)
-		{
+		if(description.swapChainTarget) {
 			textures.emplace_back(GraphicsContext::get()->getSwapChain()->getImage(0));
-		}
-		else
-		{
-			for (auto texture : description.colorTargets)
-			{
-				if (texture)
-				{
-					textures.emplace_back(texture);
-				}
+		} else {
+			for(auto texture : description.colorTargets) {
+				if(texture) { textures.emplace_back(texture); }
 			}
 		}
 
-		if (description.depthTarget)
-		{
-			textures.emplace_back(description.depthTarget);
-		}
+		if(description.depthTarget) { textures.emplace_back(description.depthTarget); }
 
-		if (description.depthArrayTarget)
-		{
-			textures.emplace_back(description.depthArrayTarget);
-		}
+		if(description.depthArrayTarget) { textures.emplace_back(description.depthArrayTarget); }
 
 		RenderPassInfo renderPassInfo;
 		renderPassInfo.depthTarget = description.depthTarget;
@@ -637,25 +533,20 @@ namespace maple
 		frameBufferInfo.renderPass = renderPass;
 		frameBufferInfo.attachments = textures;
 
-		if (description.swapChainTarget)
-		{
+		if(description.swapChainTarget) {
 			auto bufferCount = GraphicsContext::get()->getSwapChain()->getSwapChainBufferCount();
 
-			for (uint32_t i = 0; i < bufferCount; i++)
-			{
-				//todo ...............
+			for(uint32_t i = 0; i < bufferCount; i++) {
+				// todo ...............
 				frameBufferInfo.screenFBO = true;
 				textures[0] = GraphicsContext::get()->getSwapChain()->getImage(i);
 				frameBufferInfo.attachments = textures;
 				framebuffers.emplace_back(FrameBuffer::create(frameBufferInfo));
 			}
-		}
-		else if (description.depthArrayTarget)
-		{
-			auto depth = (VulkanTextureDepthArray*)description.depthArrayTarget.get();
+		} else if(description.depthArrayTarget) {
+			auto depth = (VulkanTextureDepthArray *)description.depthArrayTarget.get();
 
-			for (uint32_t i = 0; i < depth->getCount(); ++i)
-			{
+			for(uint32_t i = 0; i < depth->getCount(); ++i) {
 				frameBufferInfo.layer = i;
 				frameBufferInfo.screenFBO = false;
 				textures[0] = description.depthArrayTarget;
@@ -663,12 +554,10 @@ namespace maple
 
 				framebuffers.emplace_back(FrameBuffer::create(frameBufferInfo));
 			}
-		}
-		else
-		{
+		} else {
 			frameBufferInfo.attachments = textures;
 			frameBufferInfo.screenFBO = false;
 			framebuffers.emplace_back(FrameBuffer::create(frameBufferInfo));
 		}
 	}
-};        // namespace maple
+}; // namespace maple
