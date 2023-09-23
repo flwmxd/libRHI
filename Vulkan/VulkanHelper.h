@@ -63,7 +63,11 @@ namespace maple
 		auto checkDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char *> &deviceExtensions) -> bool;
 		auto checkValidationLayerSupport(const std::vector<const char *> &layerNames) -> bool;
 
-		auto copyTo(const Texture2D::Ptr &from, Texture2D::Ptr &to,const CommandBuffer * cmdBuffer) -> void;
+		auto copyTo(const Texture2D::Ptr &from, Texture2D::Ptr &to, const CommandBuffer *cmdBuffer) -> void;
+		auto copyTo(const Texture2D::Ptr &from, Texture2D::Ptr &to, const CommandBuffer *cmdBuffer,
+			uint32_t xoffset, uint32_t yoffset, 
+			uint32_t x, uint32_t y,
+			uint32_t width, uint32_t height) -> void;
 
 
 #ifdef USE_VMA_ALLOCATOR

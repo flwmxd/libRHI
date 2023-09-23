@@ -65,6 +65,7 @@ namespace maple
 			if constexpr (VkConfig::EnableValidationLayers)
 			{
 				extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+				extensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 			}
 
 			extensions.emplace_back("VK_KHR_surface");

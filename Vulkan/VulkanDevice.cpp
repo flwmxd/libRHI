@@ -10,6 +10,12 @@
 
 namespace maple
 {
+#ifdef _DEBUG
+	static constexpr bool EnableDebugMarker = true;
+#else
+	static constexpr bool EnableDebugMarker = false;
+#endif
+
 	namespace
 	{
 		inline auto getDeviceTypeName(VkPhysicalDeviceType type) -> const std::string
@@ -342,6 +348,11 @@ namespace maple
 		deviceExtensions.emplace_back(VK_KHR_MAINTENANCE3_EXTENSION_NAME);
 		deviceExtensions.emplace_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
 		deviceExtensions.emplace_back(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME);
+
+		if constexpr(EnableDebugMarker) 
+		{ 
+			deviceExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
+		}
 
 		// Device
 		VkDeviceCreateInfo deviceCreateInfo{};

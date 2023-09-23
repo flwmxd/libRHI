@@ -130,7 +130,9 @@ namespace maple
 		{
 			return TextureType::Color;
 		};
-		static auto copy(const Texture2D::Ptr& from, Texture2D::Ptr& to, const CommandBuffer* cmdBuffer) -> void;
+		static auto copy(const Texture2D::Ptr &from, Texture2D::Ptr &to, const CommandBuffer *cmdBuffer) -> void;
+		static auto copy(const Texture2D::Ptr &from, Texture2D::Ptr &to, const CommandBuffer *cmdBuffer, uint32_t xoffset, uint32_t yoffset, uint32_t x,
+		                 uint32_t y, uint32_t width, uint32_t height) -> void;
 
 	};
 
