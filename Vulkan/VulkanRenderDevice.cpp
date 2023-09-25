@@ -181,6 +181,7 @@ namespace maple
 
 	auto VulkanRenderDevice::drawIndexedIndirect(const CommandBuffer* commandBuffer, const StorageBuffer* indirectBuffer, uint64_t offset, uint32_t count, uint32_t stride) -> void
 	{
+		PROFILE_FUNCTION();
 		vkCmdDrawIndexedIndirect(
 			static_cast<const VulkanCommandBuffer*>(commandBuffer)->getCommandBuffer(),
 			static_cast<const VulkanStorageBuffer*>(indirectBuffer)->getHandle(),
@@ -189,6 +190,7 @@ namespace maple
 
 	auto VulkanRenderDevice::drawIndirect(const CommandBuffer* commandBuffer, const StorageBuffer* indirectBuffer, uint64_t offset, uint32_t count, uint32_t stride) -> void
 	{
+		PROFILE_FUNCTION();
 		vkCmdDrawIndirect(
 			static_cast<const VulkanCommandBuffer*>(commandBuffer)->getCommandBuffer(),
 			static_cast<const VulkanStorageBuffer*>(indirectBuffer)->getHandle(),
@@ -255,6 +257,7 @@ namespace maple
 
 	auto VulkanRenderDevice::bindDescriptorSet(Pipeline* pipeline, const CommandBuffer* commandBuffer, int32_t index, const std::shared_ptr<DescriptorSet>& descriptorSet) -> void
 	{
+		PROFILE_FUNCTION();
 		auto vkDesSet = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
 		auto set = vkDesSet->getDescriptorSet();
 		vkCmdBindDescriptorSets(
@@ -349,6 +352,7 @@ namespace maple
 
 	auto VulkanRenderDevice::memoryBarrier(const CommandBuffer* commandBuffer, ShaderType fromStage, ShaderType toStage, AccessFlags from, AccessFlags to) -> void
 	{
+		PROFILE_FUNCTION();
 		VkPipelineStageFlags srcStageMask = getStageFlags(fromStage);
 		VkPipelineStageFlags dstStageMask = getStageFlags(toStage);
 
@@ -399,6 +403,7 @@ namespace maple
 		const std::shared_ptr<StorageBuffer>& from,
 		const std::shared_ptr<StorageBuffer>& to, uint32_t size, uint32_t dstOffset, uint32_t srcOffset, bool barrier) const -> void
 	{
+		PROFILE_FUNCTION();
 		auto vkFrom = std::static_pointer_cast<VulkanStorageBuffer>(from);
 		auto vkTo = std::static_pointer_cast<VulkanStorageBuffer>(to);
 
@@ -446,6 +451,7 @@ namespace maple
 
 	auto VulkanRenderDevice::clear(const std::shared_ptr<StorageBuffer>& buffer, int32_t value, const CommandBuffer* command) -> void
 	{
+		PROFILE_FUNCTION();
 		auto vkBuffer = std::static_pointer_cast<VulkanStorageBuffer>(buffer);
 		auto vkCmd = static_cast<const VulkanCommandBuffer*>(command);
 		vkCmdFillBuffer(
@@ -458,6 +464,7 @@ namespace maple
 
 	auto VulkanRenderDevice::imageBarrier(const CommandBuffer* commandBuffer, const ImageMemoryBarrier& barriers) -> void
 	{
+		PROFILE_FUNCTION();
 		std::vector<VkImageMemoryBarrier> vkBarrier;
 		VkPipelineStageFlags              srcStageMask = 0;
 		VkPipelineStageFlags              dstStageMask = 0;

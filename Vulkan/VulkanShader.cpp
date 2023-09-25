@@ -256,6 +256,7 @@ namespace maple
 
 	auto VulkanShader::bindPushConstants(const CommandBuffer* cmdBuffer, Pipeline* pipeline) -> void
 	{
+		PROFILE_FUNCTION();
 		uint32_t index = 0;
 		for (auto& pc : pushConstants)
 		{
@@ -328,6 +329,7 @@ namespace maple
 
 	auto VulkanShader::createPipelineLayout() -> void
 	{
+		PROFILE_FUNCTION();
 		std::vector<std::vector<DescriptorLayoutInfo>> layouts;
 		std::vector<bool>                              layoutUsage;
 		std::unordered_set<ShaderType>                 stages;

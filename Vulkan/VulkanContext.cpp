@@ -25,17 +25,6 @@
 
 namespace maple
 {
-	struct VkConfig
-	{
-		static constexpr bool StandardValidationLayer = false;
-		static constexpr bool AssistanceLayer         = false;
-#ifdef _DEBUG
-		static constexpr bool EnableValidationLayers = true;
-#else
-		static constexpr bool EnableValidationLayers = true;
-#endif
-	};
-
 	namespace
 	{
 		VkDebugReportCallbackEXT reportCallback = {};
@@ -287,6 +276,7 @@ namespace maple
 
 	auto VulkanContext::waitIdle() const -> void
 	{
+		PROFILE_FUNCTION();
 		vkDeviceWaitIdle(*VulkanDevice::get());
 	}
 
@@ -358,6 +348,7 @@ namespace maple
 
 	auto VulkanContext::immediateSubmit(const std::function<void(CommandBuffer *)> &execute) -> void
 	{
+		PROFILE_FUNCTION();
 		auto updateFence = std::make_unique<VulkanFence>();
 
 		auto cmd   = CommandBuffer::create();

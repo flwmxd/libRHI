@@ -29,6 +29,7 @@ namespace maple
 
 	auto VulkanBuffer::init(VkBufferUsageFlags usage, uint32_t size, const void *data, uint32_t vmaUsage, uint32_t vmaCreateFlags) -> void
 	{
+		PROFILE_FUNCTION();
 		//param for creating
 		this->usage                   = usage;
 		this->size                    = size;
@@ -129,6 +130,7 @@ namespace maple
 	 */
 	auto VulkanBuffer::map(VkDeviceSize size, VkDeviceSize offset) -> void
 	{
+		PROFILE_FUNCTION();
 #ifdef USE_VMA_ALLOCATOR
 		VK_CHECK_RESULT(vmaMapMemory(VulkanDevice::get()->getAllocator(), allocation, &mapped));
 #else
@@ -140,6 +142,7 @@ namespace maple
 	 */
 	auto VulkanBuffer::unmap() -> void
 	{
+		PROFILE_FUNCTION();
 		if (mapped)
 		{
 #ifdef USE_VMA_ALLOCATOR
@@ -153,6 +156,8 @@ namespace maple
 
 	auto VulkanBuffer::flush(VkDeviceSize size, VkDeviceSize offset) -> void
 	{
+		PROFILE_FUNCTION();
+
 #ifdef USE_VMA_ALLOCATOR
 		vmaFlushAllocation(VulkanDevice::get()->getAllocator(), allocation, offset, size);
 #else
@@ -167,6 +172,8 @@ namespace maple
 
 	auto VulkanBuffer::invalidate(VkDeviceSize size, VkDeviceSize offset) -> void
 	{
+		PROFILE_FUNCTION();
+
 #ifdef USE_VMA_ALLOCATOR
 		vmaInvalidateAllocation(VulkanDevice::get()->getAllocator(), allocation, offset, size);
 #else
@@ -181,6 +188,7 @@ namespace maple
 
 	auto VulkanBuffer::setVkData(uint32_t size, const void *data, uint32_t offset) -> void
 	{
+		PROFILE_FUNCTION();
 		if (data != nullptr)
 		{
 			map(size, offset);

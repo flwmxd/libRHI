@@ -11,6 +11,7 @@ namespace maple
 {
 	VulkanVertexBuffer::VulkanVertexBuffer(const BufferUsage &usage)
 	{
+		PROFILE_FUNCTION();
 		auto flags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 
 		if (VulkanDevice::get()->getPhysicalDevice()->isRaytracingSupported())
@@ -30,6 +31,7 @@ namespace maple
 
 	VulkanVertexBuffer::~VulkanVertexBuffer()
 	{
+		PROFILE_FUNCTION();
 		releasePointer();
 	}
 
@@ -89,6 +91,7 @@ namespace maple
 
 	auto VulkanVertexBuffer::unbind() -> void
 	{
+		PROFILE_FUNCTION();
 	}
 
 	auto VulkanVertexBuffer::getPointerInternal() -> void *
@@ -104,6 +107,7 @@ namespace maple
 
 	auto VulkanVertexBuffer::copy(CommandBuffer *cmd, GPUBuffer *to, const BufferCopy &copy) const -> void
 	{
+		PROFILE_FUNCTION();
 		auto buffer = static_cast<VulkanVertexBuffer *>(to);
 		VkBufferCopy bufferCopy;
 		bufferCopy.dstOffset = copy.dstOffset;

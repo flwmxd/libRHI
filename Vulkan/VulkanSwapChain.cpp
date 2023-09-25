@@ -235,6 +235,7 @@ namespace maple
 
 	auto VulkanSwapChain::createFrameData() -> void
 	{
+		PROFILE_FUNCTION();
 		VkSemaphoreCreateInfo semaphoreInfo = {};
 		semaphoreInfo.sType                 = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 		semaphoreInfo.pNext                 = nullptr;
@@ -258,6 +259,8 @@ namespace maple
 
 	auto VulkanSwapChain::createComputeData() -> void
 	{
+		PROFILE_FUNCTION();
+
 		if (computeData.commandBuffer == nullptr)
 		{
 			computeData.commandPool = std::make_shared<VulkanCommandPool>(
@@ -350,13 +353,14 @@ namespace maple
 		frameData.commandBuffer->executeInternal(
 		    {VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
 		    {frameData.presentSemaphore},
-		    {frameData.commandBuffer->getSemaphore()},
+		    {/*frameData.commandBuffer->getSemaphore()*/},
 		    true);
 	}
 
 	auto VulkanSwapChain::begin() -> void
 	{
 		PROFILE_FUNCTION();
+		PROFILE_FRAMEMARKER();
 		currentBuffer = acquireImageIndex;
 		auto commandBuffer = getFrameData().commandBuffer;
 		if (commandBuffer->getState() == CommandBufferState::Submitted)
@@ -385,14 +389,15 @@ namespace maple
 	{
 		PROFILE_FUNCTION();
 
-		VkPresentInfoKHR present;
+		VkPresentInfoKHR present{};
 		present.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		present.pNext              = VK_NULL_HANDLE;
 		present.swapchainCount     = 1;
 		present.pSwapchains        = &swapChain;
 		present.pImageIndices      = &acquireImageIndex;
-		present.waitSemaphoreCount = 1;
-		present.pWaitSemaphores    = &getFrameData().commandBuffer->getSemaphore();
+
+		/*present.waitSemaphoreCount = 1;
+		present.pWaitSemaphores    = &getFrameData().commandBuffer->getSemaphore();*/
 		present.pResults           = VK_NULL_HANDLE;
 
 		auto error = vkQueuePresentKHR(VulkanDevice::get()->getPresentQueue(), &present);

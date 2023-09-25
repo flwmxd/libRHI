@@ -41,4 +41,21 @@ namespace maple
 		}                                                                                    \
 	}
 
+#ifdef MAPLE_PROFILE
+#	define TRACY_CALLSTACK 1 //win
+#	include <public/tracy/Tracy.hpp>
+#	define PROFILE_SCOPE(name) ZoneScopedN(name)
+#	define PROFILE_FUNCTION() ZoneScoped
+#	define PROFILE_FRAMEMARKER() FrameMark
+#	define PROFILE_LOCK(type, var, name) TracyLockableN(type, var, name)
+#	define PROFILE_LOCKMARKER(var) LockMark(var)
+#	define PROFILE_SETTHREADNAME(name) tracy::SetThreadName(name)
+
+#else
+#	define PROFILE_SCOPE(name)
 #	define PROFILE_FUNCTION()
+#	define PROFILE_FRAMEMARKER()
+#	define PROFILE_LOCK(type, var, name) type var
+#	define PROFILE_LOCKMARKER(var)
+#	define PROFILE_SETTHREADNAME(name)
+#endif

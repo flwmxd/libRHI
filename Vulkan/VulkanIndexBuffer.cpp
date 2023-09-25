@@ -44,6 +44,7 @@ namespace maple
 
 	auto VulkanIndexBuffer::bind(const CommandBuffer* commandBuffer) const -> void
 	{
+		PROFILE_FUNCTION();
 		vkCmdBindIndexBuffer(static_cast<const VulkanCommandBuffer*>(commandBuffer)->getCommandBuffer(), buffer, 0, indexType);
 	}
 
@@ -53,6 +54,7 @@ namespace maple
 
 	auto VulkanIndexBuffer::setData(uint32_t size, const void* data) -> void
 	{
+		PROFILE_FUNCTION();
 		setVkData(size, data);
 	}
 
@@ -69,6 +71,7 @@ namespace maple
 
 	auto VulkanIndexBuffer::getPointerInternal() -> void*
 	{
+		PROFILE_FUNCTION();
 		if (!mappedBuffer)
 		{
 			VulkanBuffer::map();
@@ -79,6 +82,7 @@ namespace maple
 
 	auto VulkanIndexBuffer::copy(CommandBuffer* cmd, GPUBuffer* to, const BufferCopy& copy) const -> void
 	{
+		PROFILE_FUNCTION();
 		auto         buffer = static_cast<VulkanIndexBuffer*>(to);
 		VkBufferCopy bufferCopy;
 		bufferCopy.dstOffset = copy.dstOffset;
@@ -89,6 +93,7 @@ namespace maple
 
 	auto VulkanIndexBuffer::setData(const uint16_t* data, uint32_t count) -> void
 	{
+		PROFILE_FUNCTION();
 		setData(count * sizeof(uint16_t), data);
 		this->count = count;
 	}

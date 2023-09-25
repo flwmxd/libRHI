@@ -242,9 +242,6 @@ namespace maple
 	{
 		vkDestroyPipelineCache(device, pipelineCache, VK_NULL_HANDLE);
 
-#if defined(MAPLE_PROFILE) && defined(TRACY_ENABLE)
-		TracyVkDestroy(tracyContext);
-#endif
 		if (device != nullptr)
 			vkDestroyDevice(device, nullptr);
 
@@ -260,14 +257,6 @@ namespace maple
 		allocInfo.level                       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		allocInfo.commandPool                 = *commandPool;
 		allocInfo.commandBufferCount          = 1;
-
-#if defined(MAPLE_PROFILE) && defined(TRACY_ENABLE)
-		VkCommandBuffer tracyBuffer;
-		vkAllocateCommandBuffers(device, &allocInfo, &tracyBuffer);
-		tracyContext = TracyVkContext(*physicalDevice, device, graphicsQueue, tracyBuffer);
-		vkQueueWaitIdle(graphicsQueue);
-		vkFreeCommandBuffers(device, *commandPool, 1, &tracyBuffer);
-#endif
 	}
 
 	auto VulkanDevice::init() -> bool
@@ -349,7 +338,7 @@ namespace maple
 		deviceExtensions.emplace_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
 		deviceExtensions.emplace_back(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME);
 
-		if constexpr(EnableDebugMarker) 
+		if constexpr(EnableDebugMarker && VkConfig::EnableValidationLayers) 
 		{ 
 			deviceExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
 		}

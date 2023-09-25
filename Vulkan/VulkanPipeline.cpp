@@ -317,6 +317,7 @@ namespace maple
 	auto VulkanPipeline::beginSecondary(const CommandBuffer *commandBuffer, uint32_t layer /*= 0*/, int32_t cubeFace /*= -1*/, int32_t mipMapLevel /*= 0*/)
 	    -> void
 	{
+		PROFILE_FUNCTION();
 		auto mipScale = std::pow(0.5, mipMapLevel);
 		FrameBuffer *framebuffer = nullptr;
 		transitionAttachments();
@@ -409,6 +410,7 @@ namespace maple
 
 	auto VulkanPipeline::getFrameBuffer() -> std::shared_ptr<FrameBuffer>
 	{
+		PROFILE_FUNCTION();
 		if(description.swapChainTarget) {
 			return framebuffers[VulkanContext::get()->getSwapChain()->getCurrentImageIndex()];
 		} else {
@@ -418,6 +420,7 @@ namespace maple
 
 	auto VulkanPipeline::dispatchIndirect(const CommandBuffer *cmdBuffer, const StorageBuffer *ssbo, uint64_t offset) -> void
 	{
+		PROFILE_FUNCTION();
 		auto vkCmd = static_cast<const VulkanCommandBuffer *>(cmdBuffer);
 		auto vkBuffer = static_cast<const VulkanStorageBuffer *>(ssbo);
 		vkCmdDispatchIndirect(vkCmd->getCommandBuffer(), vkBuffer->getHandle(), offset);
@@ -426,6 +429,7 @@ namespace maple
 	auto VulkanPipeline::drawIndexedIndirect(const CommandBuffer *cmdBuffer, const StorageBuffer *ssbo, uint32_t drawCount, uint32_t stride,
 	                                         uint64_t offset /*= 0*/) -> void
 	{
+		PROFILE_FUNCTION();
 		auto vkCmd = static_cast<const VulkanCommandBuffer *>(cmdBuffer);
 		auto vkBuffer = static_cast<const VulkanStorageBuffer *>(ssbo);
 		vkCmdDrawIndexedIndirect(vkCmd->getCommandBuffer(), vkBuffer->getHandle(), offset, drawCount, stride);
@@ -434,12 +438,14 @@ namespace maple
 	auto VulkanPipeline::drawIndexed(const CommandBuffer *cmdBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset,
 	                                 uint32_t firstInstance) -> void
 	{
+		PROFILE_FUNCTION();
 		auto vkCmd = static_cast<const VulkanCommandBuffer *>(cmdBuffer);
 		vkCmdDrawIndexed(vkCmd->getCommandBuffer(), indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 
 	auto VulkanPipeline::bufferBarrier(const CommandBuffer *commandBuffer, const std::vector<std::shared_ptr<StorageBuffer>> &buffers, bool read) -> void
 	{
+		PROFILE_FUNCTION();
 		auto vkCmd = static_cast<const VulkanCommandBuffer *>(commandBuffer);
 		std::vector<VkBufferMemoryBarrier> bufferBarriers;
 		for(auto &ssbo : buffers) {

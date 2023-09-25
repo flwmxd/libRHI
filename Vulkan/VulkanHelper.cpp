@@ -525,7 +525,7 @@ namespace maple
 					swapchainPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
 					break;
 				}
-				if(availablePresentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) { swapchainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR; }
+			/*	if(availablePresentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) { swapchainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR; }*/
 			}
 		}
 		return swapchainPresentMode;

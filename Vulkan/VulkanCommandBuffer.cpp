@@ -35,6 +35,8 @@ namespace maple
 
 	auto VulkanCommandBuffer::init(bool primary) -> bool
 	{
+		PROFILE_FUNCTION();
+	
 		fence = std::make_shared<VulkanFence>(true);
 		this->primary = primary;
 
@@ -57,6 +59,8 @@ namespace maple
 
 	auto VulkanCommandBuffer::init(bool primary, VkCommandPool cmdPool) -> bool
 	{
+		PROFILE_FUNCTION();
+
 		this->primary = primary;
 
 		commandPool = cmdPool;
@@ -126,7 +130,7 @@ namespace maple
 
 		VkCommandBufferBeginInfo beginCI{};
 		beginCI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginCI.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+		beginCI.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;//VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
 		beginCI.pInheritanceInfo = &inheritanceInfo;
 
 		VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &beginCI));
@@ -200,6 +204,8 @@ namespace maple
 
 	auto VulkanCommandBuffer::clearAttachments(const std::shared_ptr<Texture> & attachments, const maple::vec4& value, const maple::ivec4& rect) -> void
 	{
+		PROFILE_FUNCTION();
+
 		VkClearAttachment attachment{};
 		if (attachments->getType() == TextureType::Color) 
 		{
@@ -225,6 +231,8 @@ namespace maple
 
 	auto VulkanCommandBuffer::bindPipeline(Pipeline* pipeline) -> void
 	{
+		PROFILE_FUNCTION();
+
 		if (pipeline != boundPipeline)
 		{
 			if (boundPipeline)
@@ -237,6 +245,8 @@ namespace maple
 
 	auto VulkanCommandBuffer::unbindPipeline() -> void
 	{
+		PROFILE_FUNCTION();
+
 		if (boundPipeline)
 			boundPipeline->end(this);
 		boundPipeline = nullptr;
@@ -244,6 +254,8 @@ namespace maple
 
 	auto VulkanCommandBuffer::flush() -> bool
 	{
+		PROFILE_FUNCTION();
+
 		if (state != CommandBufferState::Idle)
 		{
 			GraphicsContext::get()->waitIdle();
@@ -260,6 +272,8 @@ namespace maple
 
 	auto VulkanCommandBuffer::submit() -> void
 	{
+		PROFILE_FUNCTION();
+
 		endRecording();
 
 		if (updateFence == nullptr)

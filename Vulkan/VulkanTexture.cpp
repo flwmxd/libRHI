@@ -155,6 +155,7 @@ namespace maple
 
 	VulkanTexture2D::VulkanTexture2D()
 	{
+		PROFILE_FUNCTION();
 		id = IdGenerator++;
 		deleteImage = false;
 
@@ -184,6 +185,7 @@ namespace maple
 
 	auto VulkanTexture2D::update(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const void *buffer, bool mipmap) -> void
 	{
+		PROFILE_FUNCTION();
 		auto stagingBuffer = std::make_unique<VulkanBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, w * h * tools::getFormatSize(parameters.format), buffer);
 		auto oldLayout = imageLayout;
 
@@ -205,6 +207,7 @@ namespace maple
 
 	auto VulkanTexture2D::copyImage(const CommandBuffer *cmd, uint8_t *out) -> void
 	{
+		PROFILE_FUNCTION();
 		if(cmd == nullptr) {
 			auto readBackBuffer = std::make_unique<VulkanBuffer>(
 			    VK_BUFFER_USAGE_TRANSFER_DST_BIT, width * height * tools::getFormatSize(parameters.format), nullptr, VMA_MEMORY_USAGE_GPU_TO_CPU);
@@ -241,6 +244,7 @@ namespace maple
 
 	auto VulkanTexture2D::getDescriptorInfo(int32_t mipLvl, TextureFormat format) -> void *
 	{
+		PROFILE_FUNCTION();
 		descriptor.sampler = textureSampler;
 		descriptor.imageView = mipLevels > 1 && imageLayouts.size() > mipLvl ? mipImageViews[mipLvl] : textureImageView;
 		descriptor.imageLayout = mipLevels > 1 && imageLayouts.size() > mipLvl ? imageLayouts[mipLvl] : imageLayout;
@@ -249,6 +253,7 @@ namespace maple
 
 	auto VulkanTexture2D::getImageFboView() -> VkImageView
 	{
+		PROFILE_FUNCTION();
 		if(mipLevels <= 1) return textureImageView;
 
 		if(textureFboImageView == nullptr) {
@@ -259,6 +264,7 @@ namespace maple
 
 	auto VulkanTexture2D::setSampler(const std::shared_ptr<Sampler> &sampler) -> void
 	{
+		PROFILE_FUNCTION();
 		textureSampler = std::static_pointer_cast<VulkanSampler>(sampler)->getSampler();
 		updateDescriptor();
 	}
@@ -271,6 +277,7 @@ namespace maple
 
 	auto VulkanTexture2D::updateDescriptor() -> void
 	{
+		PROFILE_FUNCTION();
 		descriptor.sampler = textureSampler;
 		descriptor.imageView = textureImageView;
 		descriptor.imageLayout = imageLayout;
@@ -473,6 +480,7 @@ namespace maple
 
 	auto VulkanTexture2D::setName(const std::string &name) -> void
 	{
+		PROFILE_FUNCTION();
 		Texture::setName(name);
 		VulkanHelper::setObjectName("Image:" + name, (uint64_t)textureImage, VK_OBJECT_TYPE_IMAGE);
 		VulkanHelper::setObjectName("ImageView:" + name, (uint64_t)textureImageView, VK_OBJECT_TYPE_IMAGE_VIEW);
@@ -480,6 +488,7 @@ namespace maple
 
 	auto VulkanTexture2D::generateMipmaps(const CommandBuffer *cmd) -> void
 	{
+		PROFILE_FUNCTION();
 		if(mipLevels > 1) {
 			auto vkCmd = ((VulkanCommandBuffer *)cmd);
 			auto oldLayout = imageLayout;

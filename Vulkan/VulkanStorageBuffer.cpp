@@ -4,7 +4,7 @@
 
 #include "VulkanStorageBuffer.h"
 #include "VulkanBuffer.h"
-
+#include "Console.h"
 namespace maple
 {
 	VulkanStorageBuffer::VulkanStorageBuffer(uint32_t size, const void *data, const BufferOptions &options) :
@@ -45,6 +45,8 @@ namespace maple
 
 	auto VulkanStorageBuffer::setData(uint32_t size, const void *data) -> void
 	{
+		PROFILE_FUNCTION();
+
 		if (vulkanBuffer->getSize() == 0)
 		{
 			VkBufferUsageFlags flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
@@ -72,6 +74,7 @@ namespace maple
 
 	auto VulkanStorageBuffer::mapMemory(const std::function<void(void *)> &call) -> void
 	{
+		PROFILE_FUNCTION();
 		vulkanBuffer->map();
 		call(vulkanBuffer->getMapped());
 		vulkanBuffer->unmap();
@@ -79,27 +82,32 @@ namespace maple
 
 	auto VulkanStorageBuffer::unmap() -> void
 	{
+		PROFILE_FUNCTION();
 		vulkanBuffer->unmap();
 	}
 
 	auto VulkanStorageBuffer::map() -> void *
 	{
+		PROFILE_FUNCTION();
 		vulkanBuffer->map();
 		return vulkanBuffer->getMapped();
 	}
 
 	auto VulkanStorageBuffer::getDeviceAddress() const -> uint64_t
 	{
+		PROFILE_FUNCTION();
 		return vulkanBuffer->getDeviceAddress();
 	}
 
 	auto VulkanStorageBuffer::getSize() const -> uint32_t
 	{
+		PROFILE_FUNCTION();
 		return vulkanBuffer->getSize();
 	}
 
 	auto VulkanStorageBuffer::resize(uint32_t size) -> void
 	{
+		PROFILE_FUNCTION();
 		dirty = true;
 		vulkanBuffer->release();
 
@@ -118,6 +126,7 @@ namespace maple
 
 	auto VulkanStorageBuffer::setAccessFlagBits(uint32_t flags) -> void
 	{
+		PROFILE_FUNCTION();
 		lastAccessFlagBits = accessFlagBits;
 		accessFlagBits     = flags;
 	}

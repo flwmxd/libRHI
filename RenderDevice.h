@@ -46,7 +46,7 @@ namespace maple
 		virtual auto imageBarrier(const CommandBuffer* commandBuffer, const ImageMemoryBarrier& barriers) -> void {};
 
 		virtual auto drawArraysInternal(const CommandBuffer* commandBuffer, DrawType type, uint32_t count, uint32_t start = 0) const -> void {};
-		virtual auto drawIndexedInternal(const CommandBuffer* commandBuffer, DrawType type, uint32_t count, uint32_t start = 0) const -> void {};
+		virtual auto drawIndexedInternal(const CommandBuffer* commandBuffer, DrawType type, uint32_t count, uint32_t start = 0, uint32_t vertexOffset = 0) const -> void {};
 
 		virtual auto drawInternal(const CommandBuffer* commandBuffer, DrawType type, uint32_t count, DataType dataType = DataType::UnsignedInt, const void* indices = nullptr) const -> void {};
 		virtual auto bindDescriptorSets(Pipeline* pipeline, const CommandBuffer* commandBuffer, const std::vector<std::shared_ptr<DescriptorSet>>& descriptorSets) -> void {};

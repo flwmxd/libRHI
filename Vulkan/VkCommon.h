@@ -28,5 +28,16 @@ namespace maple
 
 	auto loadVKRayTracingPipelineKHR(VkInstance instance, PFN_vkGetInstanceProcAddr getInstanceProcAddr, VkDevice device, PFN_vkGetDeviceProcAddr getDeviceProcAddr) -> int32_t;
 	auto loadVKAccelerationStructureKHR(VkInstance instance, PFN_vkGetInstanceProcAddr getInstanceProcAddr, VkDevice device, PFN_vkGetDeviceProcAddr getDeviceProcAddr) -> int32_t;
+	
+	struct VkConfig
+	{
+		static constexpr bool StandardValidationLayer = false;
+		static constexpr bool AssistanceLayer = false;
+#ifdef _DEBUG
+		static constexpr bool EnableValidationLayers = false;
+#else
+		static constexpr bool EnableValidationLayers = true;
+#endif
+	};
 }        // namespace maple
 
