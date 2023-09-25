@@ -26,7 +26,7 @@ namespace maple
 		auto onResize(uint32_t width, uint32_t height) -> void override;
 		auto presentInternal() -> void override;
 		auto presentInternal(const CommandBuffer* commandBuffer) -> void override;
-		auto drawIndexedInternal(const CommandBuffer* commandBuffer, DrawType type, uint32_t count, uint32_t start) const -> void override;
+		auto drawIndexedInternal(const CommandBuffer* commandBuffer, DrawType type, uint32_t count, uint32_t start, uint32_t vertexOffset = 0) const -> void override;
 		auto drawInternal(const CommandBuffer* commandBuffer, DrawType type, uint32_t count, DataType datayType, const void* indices) const -> void override;
 		auto drawArraysInternal(const CommandBuffer* commandBuffer, DrawType type, uint32_t count, uint32_t start = 0) const -> void override;
 		auto drawInstanced(const CommandBuffer* commandBuffer, uint32_t verticesCount, uint32_t instanceCount, int32_t startInstance, int32_t startVertex) const -> void override;

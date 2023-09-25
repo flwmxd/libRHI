@@ -49,6 +49,8 @@ namespace maple
 				}
 			}
 
+			if(beginFunc == nullptr) return;
+
 			auto cmdBuffer = maple::GraphicsContext::get()->getSwapChain()->getCurrentCommandBuffer();
 			auto vkCmd = static_cast<VulkanCommandBuffer *>(cmdBuffer);
 
@@ -61,6 +63,8 @@ namespace maple
 
 		auto cmdEndLabel() -> void
 		{
+			if(beginFunc == nullptr) return;
+
 			auto cmdBuffer = maple::GraphicsContext::get()->getSwapChain()->getCurrentCommandBuffer();
 			auto vkCmd = static_cast<VulkanCommandBuffer *>(cmdBuffer);
 			endFunc(vkCmd->getCommandBuffer());
