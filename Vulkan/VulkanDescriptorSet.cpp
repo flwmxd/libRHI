@@ -25,7 +25,7 @@ namespace maple
 {
 	namespace
 	{
-		auto transitionImageLayout(const CommandBuffer* cmd, Texture* texture, bool sampler2d, int32_t mipLevel)
+		inline auto transitionImageLayout(const CommandBuffer* cmd, Texture* texture, bool sampler2d, int32_t mipLevel)
 		{
 			if (!texture)
 				return;
@@ -111,13 +111,27 @@ namespace maple
 			descriptorSetAllocateInfo.pNext = &variableInfo;
 		}
 
-		shader = info.shader;
+		shader		= info.shader;
 		descriptors = shader->getDescriptorInfo(info.layoutIndex);
 		uniformBuffers.resize(framesInFlight);
 
 		for (auto& descriptor : descriptors)
 		{
-			if (descriptor.type == DescriptorType::UniformBuffer || descriptor.type == DescriptorType::UniformBufferDynamic)
+			if (descriptor.type == DescriptorType::UniformBufferDynamic) 
+			{
+				dynamic = true;
+
+				for (uint32_t frame = 0; frame < framesInFlight; frame++)
+				{
+					uniformBuffers[frame][descriptor.name] = nullptr;
+				}
+
+				UniformBufferInfo info{};
+				info.members = descriptor.members;
+				uniformBuffersData[descriptor.name] = info;
+			}
+
+			if (descriptor.type == DescriptorType::UniformBuffer)
 			{
 				for (uint32_t frame = 0; frame < framesInFlight; frame++)
 				{
@@ -130,7 +144,7 @@ namespace maple
 				localStorage.allocate(descriptor.size);
 				localStorage.initializeEmpty();
 
-				UniformBufferInfo info;
+				UniformBufferInfo info{};
 				info.localStorage = localStorage;
 				info.hasUpdated[0] = false;
 				info.hasUpdated[1] = false;
@@ -171,11 +185,9 @@ namespace maple
 		}
 	}
 
-	auto VulkanDescriptorSet::update(const CommandBuffer* commandBuffer, const ImageMemoryBarrier& barrier) -> void
+	auto VulkanDescriptorSet::update(const CommandBuffer* commandBuffer) -> void
 	{
 		PROFILE_FUNCTION();
-
-		dynamic = false;
 
 		int32_t descriptorWritesCount = 0;
 
@@ -187,15 +199,12 @@ namespace maple
 		{
 			if (bufferInfo.second.hasUpdated[currentFrame])
 			{
-				if (bufferInfo.second.dynamic)
-					uniformBuffers[currentFrame][bufferInfo.first]->setDynamicData(bufferInfo.second.localStorage.size, 0, bufferInfo.second.localStorage.data);
-				else
+				if (!bufferInfo.second.dynamic)
 					uniformBuffers[currentFrame][bufferInfo.first]->setData(bufferInfo.second.localStorage.data);
-
 				bufferInfo.second.hasUpdated[currentFrame] = false;
 			}
 		}
-		//currentFrame = Application::getGraphicsContext()->getSwapChain()->getCurrentBufferIndex();
+
 		for (auto& imageInfo : descriptors)
 		{
 			if (imageInfo.type == DescriptorType::ImageSampler || imageInfo.type == DescriptorType::Image)
@@ -204,9 +213,7 @@ namespace maple
 				{
 					for (uint32_t i = 0; i < imageInfo.textures.size(); i++)
 					{
-						auto iter = std::find(barrier.textures.begin(), barrier.textures.end(), imageInfo.textures[i]);
-
-						if (imageInfo.textures[i] && iter == barrier.textures.end())
+						if (imageInfo.textures[i])
 						{
 							transitionImageLayout(
 								commandBuffer, imageInfo.textures[i].get(),
@@ -217,8 +224,6 @@ namespace maple
 				}
 			}
 		}
-
-		//Renderer::imageBarrier(commandBuffer, barrier);
 
 		if (descriptorDirty[currentFrame])
 		{
@@ -237,12 +242,6 @@ namespace maple
 						{
 							if (imageInfo.textures[i])
 							{
-								/*
-								transitionImageLayout(
-									commandBuffer, imageInfo.textures[i].get(),
-									imageInfo.type == DescriptorType::ImageSampler,
-									imageInfo.mipmapLevel);*/
-
 								const auto& des = *static_cast<VkDescriptorImageInfo*>(imageInfo.textures[i]->getDescriptorInfo(imageInfo.mipmapLevel, imageInfo.format));
 
 								imageInfoPool[i + imageIndex] = des;
@@ -268,13 +267,33 @@ namespace maple
 						}
 					}
 				}
+				else if (imageInfo.type == DescriptorType::UniformBufferDynamic) 
+				{
+					auto buffer = std::static_pointer_cast<VulkanUniformBuffer>(uniformBuffers[currentFrame][imageInfo.name]);
+
+					bufferInfoPool[index].buffer = buffer->getVkBuffer();
+					bufferInfoPool[index].offset = imageInfo.offset;
+					bufferInfoPool[index].range = imageInfo.size;//TODO...should be more dynamic later...
+
+					VkWriteDescriptorSet writeDescriptorSet{};
+					writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					writeDescriptorSet.dstSet = descriptorSet[currentFrame];
+					writeDescriptorSet.descriptorType = VkConverter::descriptorTypeToVK(imageInfo.type);
+					writeDescriptorSet.dstBinding = imageInfo.binding;
+					writeDescriptorSet.pBufferInfo = &bufferInfoPool[index];
+					writeDescriptorSet.descriptorCount = 1;
+
+					writeDescriptorSetPool[descriptorWritesCount] = writeDescriptorSet;
+					index++;
+					descriptorWritesCount++;
+				}
 				else if (imageInfo.type == DescriptorType::UniformBuffer)
 				{
 					auto buffer = std::static_pointer_cast<VulkanUniformBuffer>(uniformBuffers[currentFrame][imageInfo.name]);
 
 					bufferInfoPool[index].buffer = buffer->getVkBuffer();
 					bufferInfoPool[index].offset = imageInfo.offset;
-					bufferInfoPool[index].range = imageInfo.size;
+					bufferInfoPool[index].range =  imageInfo.size;
 
 					VkWriteDescriptorSet writeDescriptorSet{};
 					writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -343,6 +362,125 @@ namespace maple
 		}
 	}
 
+	auto VulkanDescriptorSet::initUpdate() ->void
+	{
+		int32_t imageIndex = 0;
+		int32_t index = 0;
+		uint32_t descriptorWritesCount = 0;
+
+		for (auto currentFrame = 0; currentFrame <framesInFlight; currentFrame++)
+		{
+			for (auto& imageInfo : descriptors)
+			{
+				if (imageInfo.type == DescriptorType::ImageSampler || imageInfo.type == DescriptorType::Image)
+				{
+					if (!imageInfo.textures.empty())
+					{
+						auto validCount = 0;
+						for (uint32_t i = 0; i < imageInfo.textures.size(); i++)
+						{
+							if (imageInfo.textures[i])
+							{
+								const auto& des = *static_cast<VkDescriptorImageInfo*>(imageInfo.textures[i]->getDescriptorInfo(imageInfo.mipmapLevel, imageInfo.format));
+
+								imageInfoPool[i + imageIndex] = des;
+								validCount++;
+							}
+						}
+
+						if (validCount > 0)
+						{
+							VkWriteDescriptorSet writeDescriptorSet{};
+							writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+							writeDescriptorSet.dstSet = descriptorSet[currentFrame];
+							writeDescriptorSet.descriptorType = VkConverter::descriptorTypeToVK(imageInfo.type);
+							writeDescriptorSet.dstBinding = imageInfo.binding;
+							writeDescriptorSet.pImageInfo = &imageInfoPool[imageIndex];
+							writeDescriptorSet.descriptorCount = validCount;
+
+							MAPLE_ASSERT(writeDescriptorSet.descriptorCount != 0, "writeDescriptorSet.descriptorCount should be greater than zero");
+
+							writeDescriptorSetPool[descriptorWritesCount] = writeDescriptorSet;
+							imageIndex += validCount;
+							descriptorWritesCount++;
+						}
+					}
+				}
+				else if (imageInfo.type == DescriptorType::UniformBuffer || imageInfo.type == DescriptorType::UniformBufferDynamic)
+				{
+					auto buffer = std::static_pointer_cast<VulkanUniformBuffer>(uniformBuffers[currentFrame][imageInfo.name]);
+
+					bufferInfoPool[index].buffer = buffer->getVkBuffer();
+					bufferInfoPool[index].offset = imageInfo.offset;
+					bufferInfoPool[index].range = imageInfo.size;
+
+					VkWriteDescriptorSet writeDescriptorSet{};
+					writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					writeDescriptorSet.dstSet = descriptorSet[currentFrame];
+					writeDescriptorSet.descriptorType = VkConverter::descriptorTypeToVK(imageInfo.type);
+					writeDescriptorSet.dstBinding = imageInfo.binding;
+					writeDescriptorSet.pBufferInfo = &bufferInfoPool[index];
+					writeDescriptorSet.descriptorCount = 1;
+
+					writeDescriptorSetPool[descriptorWritesCount] = writeDescriptorSet;
+					index++;
+					descriptorWritesCount++;
+				}
+				else if (imageInfo.type == DescriptorType::Buffer)
+				{
+					auto& buffers = ssbos[imageInfo.name];
+
+					int32_t i = 0;
+
+					for (auto& ssbo : buffers)
+					{
+						bufferInfoPool[index + i].buffer = (VkBuffer)ssbo->handle();
+						bufferInfoPool[index + i].offset = imageInfo.offset;
+						bufferInfoPool[index + i].range = imageInfo.size;
+						i++;
+					}
+
+					VkWriteDescriptorSet writeDescriptorSet{};
+					writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					writeDescriptorSet.dstSet = descriptorSet[currentFrame];
+					writeDescriptorSet.descriptorType = VkConverter::descriptorTypeToVK(imageInfo.type);
+					writeDescriptorSet.dstBinding = imageInfo.binding;
+					writeDescriptorSet.pBufferInfo = &bufferInfoPool[index];
+					writeDescriptorSet.descriptorCount = i;
+
+					MAPLE_ASSERT(i != 0, "descriptorCount should not be zero");
+					writeDescriptorSetPool[descriptorWritesCount] = writeDescriptorSet;
+					index += i;
+					descriptorWritesCount++;
+				}
+				else if (imageInfo.type == DescriptorType::AccelerationStructure)
+				{
+					auto acc = std::static_pointer_cast<VulkanAccelerationStructure>(accelerationStructures[imageInfo.name]);
+
+					VkWriteDescriptorSetAccelerationStructureKHR descriptorAs{};
+					descriptorAs.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+					descriptorAs.pNext = nullptr;
+					descriptorAs.accelerationStructureCount = 1;
+					descriptorAs.pAccelerationStructures = &acc->getAccelerationStructure();
+
+					VkWriteDescriptorSet writeDescriptorSet{};
+					writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					writeDescriptorSet.dstSet = descriptorSet[currentFrame];
+					writeDescriptorSet.descriptorType = VkConverter::descriptorTypeToVK(imageInfo.type);
+					writeDescriptorSet.dstBinding = imageInfo.binding;
+					writeDescriptorSet.descriptorCount = 1;
+					writeDescriptorSet.pNext = &descriptorAs;
+
+					writeDescriptorSetPool[descriptorWritesCount] = writeDescriptorSet;
+					descriptorWritesCount++;
+				}
+			}
+		}
+
+		if (descriptorWritesCount > 0)
+			vkUpdateDescriptorSets(*VulkanDevice::get(), descriptorWritesCount, writeDescriptorSetPool.data(), 0, nullptr);
+	}
+
 	auto VulkanDescriptorSet::getDescriptorSet() -> VkDescriptorSet
 	{
 		return descriptorSet[currentFrame];
@@ -408,7 +546,7 @@ namespace maple
 		return nullptr;
 	}
 
-	auto VulkanDescriptorSet::setUniform(const std::string& bufferName, const std::string& uniformName, const void* data, bool dynamic) -> void
+	auto VulkanDescriptorSet::setUniform(const std::string& bufferName, const std::string& uniformName, const void* data) -> void
 	{
 		PROFILE_FUNCTION();
 		if (auto iter = uniformBuffersData.find(bufferName); iter != uniformBuffersData.end())
@@ -421,7 +559,6 @@ namespace maple
 					iter->second.hasUpdated[0] = true;
 					iter->second.hasUpdated[1] = true;
 					iter->second.hasUpdated[2] = true;
-					iter->second.dynamic = dynamic;
 					return;
 				}
 			}
@@ -429,7 +566,7 @@ namespace maple
 		LOGW("Uniform not found {0}.{1}", bufferName, uniformName);
 	}
 
-	auto VulkanDescriptorSet::setUniform(const std::string& bufferName, const std::string& uniformName, const void* data, uint32_t size, bool dynamic) -> void
+	auto VulkanDescriptorSet::setUniform(const std::string& bufferName, const std::string& uniformName, const void* data, uint32_t size) -> void
 	{
 		PROFILE_FUNCTION();
 		if (auto iter = uniformBuffersData.find(bufferName); iter != uniformBuffersData.end())
@@ -442,7 +579,6 @@ namespace maple
 					iter->second.hasUpdated[0] = true;
 					iter->second.hasUpdated[1] = true;
 					iter->second.hasUpdated[2] = true;
-					iter->second.dynamic = dynamic;
 					return;
 				}
 			}
@@ -450,7 +586,7 @@ namespace maple
 		LOGW("Uniform not found {0}.{1}", bufferName, uniformName);
 	}
 
-	auto VulkanDescriptorSet::setUniformBufferData(const std::string& bufferName, const void* data, bool dynamic) -> void
+	auto VulkanDescriptorSet::setUniform(const std::string& bufferName, const void* data) -> void
 	{
 		PROFILE_FUNCTION();
 		if (auto iter = uniformBuffersData.find(bufferName); iter != uniformBuffersData.end())
@@ -459,7 +595,6 @@ namespace maple
 			iter->second.hasUpdated[0] = true;
 			iter->second.hasUpdated[1] = true;
 			iter->second.hasUpdated[2] = true;
-			iter->second.dynamic = dynamic;
 			return;
 		}
 		LOGW("Uniform not found {0}.{1}", bufferName);

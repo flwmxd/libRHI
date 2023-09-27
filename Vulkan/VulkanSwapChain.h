@@ -16,7 +16,6 @@ namespace maple
 	{
 		std::shared_ptr<VulkanCommandPool>   commandPool;
 		std::shared_ptr<VulkanCommandBuffer> commandBuffer;
-		VkSemaphore                          presentSemaphore = VK_NULL_HANDLE;
 	};
 
 	struct ComputeData
@@ -48,7 +47,7 @@ namespace maple
 
 		auto getCurrentBufferIndex() const -> uint32_t override
 		{
-			return currentBuffer;
+			return acquireImageIndex;
 		}
 
 		auto getCurrentImageIndex() const -> uint32_t override
@@ -102,7 +101,6 @@ namespace maple
 
 		std::vector<std::shared_ptr<Texture2D>> swapChainBuffers;
 
-		uint32_t currentBuffer        = 0;
 		uint32_t acquireImageIndex    = 0;
 		uint32_t queueNodeIndex       = -1;
 		uint32_t width                = 0;
@@ -119,5 +117,7 @@ namespace maple
 
 		// Execution dependency between compute & graphic submission
 		VkSemaphore graphicsSemaphore = nullptr;
+
+		VkSemaphore presentSemaphore = VK_NULL_HANDLE;
 	};
 };        // namespace maple

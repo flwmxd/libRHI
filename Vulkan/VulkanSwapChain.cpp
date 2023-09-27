@@ -37,7 +37,7 @@ namespace maple
 		for (uint32_t i = 0; i < swapChainBufferCount; i++)
 		{
 			frames[i].commandBuffer->flush();
-			vkDestroySemaphore(*VulkanDevice::get(), frames[i].presentSemaphore, nullptr);
+			vkDestroySemaphore(*VulkanDevice::get(), presentSemaphore, nullptr);
 			frames[i].commandBuffer = nullptr;
 		}
 		vkDestroySwapchainKHR(*VulkanDevice::get(), swapChain, VK_NULL_HANDLE);
@@ -174,8 +174,8 @@ namespace maple
 
 				frames[i].commandBuffer->reset();
 
-				vkDestroySemaphore(*VulkanDevice::get(), frames[i].presentSemaphore, nullptr);
-				frames[i].presentSemaphore = VK_NULL_HANDLE;
+				vkDestroySemaphore(*VulkanDevice::get(), presentSemaphore, nullptr);
+				 presentSemaphore = VK_NULL_HANDLE;
 			}
 		}
 
@@ -213,7 +213,6 @@ namespace maple
 
 		delete[] pSwapChainImages;
 		createFrameData();
-		//createComputeData();
 
 		if (graphicsSemaphore == nullptr)
 		{
@@ -221,15 +220,6 @@ namespace maple
 			semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 			VK_CHECK_RESULT(vkCreateSemaphore(*VulkanDevice::get(), &semaphoreCreateInfo, nullptr, &graphicsSemaphore));
 		}
-
-		// Signal the semaphore
-		/*	VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &computeData.semaphore;
-		VK_CHECK_RESULT(vkQueueSubmit(VulkanDevice::get()->getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE));
-		VK_CHECK_RESULT(vkQueueWaitIdle(VulkanDevice::get()->getGraphicsQueue()));*/
-
 		return true;
 	}
 
@@ -252,9 +242,9 @@ namespace maple
 				frames[i].commandBuffer->init(true, *frames[i].commandPool);
 			}
 
-			if (frames[i].presentSemaphore == nullptr)
-				VK_CHECK_RESULT(vkCreateSemaphore(*VulkanDevice::get(), &semaphoreInfo, nullptr, &frames[i].presentSemaphore));
 		}
+		if (presentSemaphore == nullptr)
+			VK_CHECK_RESULT(vkCreateSemaphore(*VulkanDevice::get(), &semaphoreInfo, nullptr, &presentSemaphore));
 	}
 
 	auto VulkanSwapChain::createComputeData() -> void
@@ -328,8 +318,7 @@ namespace maple
 		if (swapChainBufferCount == 1 && acquireImageIndex != std::numeric_limits<uint32_t>::max())
 			return;
 		{
-			auto &frameData = getFrameData();
-			auto result = vkAcquireNextImageKHR(*VulkanDevice::get(), swapChain, UINT64_MAX, frameData.presentSemaphore, VK_NULL_HANDLE, &acquireImageIndex);
+			auto result = vkAcquireNextImageKHR(*VulkanDevice::get(), swapChain, UINT64_MAX, presentSemaphore, VK_NULL_HANDLE, &acquireImageIndex);
 
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 			{
@@ -352,7 +341,7 @@ namespace maple
 		auto &frameData = getFrameData();
 		frameData.commandBuffer->executeInternal(
 		    {VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
-		    {frameData.presentSemaphore},
+		    {presentSemaphore},
 		    {/*frameData.commandBuffer->getSemaphore()*/},
 		    true);
 	}
@@ -361,15 +350,8 @@ namespace maple
 	{
 		PROFILE_FUNCTION();
 		PROFILE_FRAMEMARKER();
-		currentBuffer = acquireImageIndex;
-		auto commandBuffer = getFrameData().commandBuffer;
-		if (commandBuffer->getState() == CommandBufferState::Submitted)
-		{
-			commandBuffer->wait();
-		}
-		commandBuffer->reset();
-		VulkanContext::getDeletionQueue(currentBuffer).flush();
 		acquireNextImage();
+		auto commandBuffer = getFrameData().commandBuffer;
 		commandBuffer->beginRecording();
 	}
 
@@ -414,6 +396,14 @@ namespace maple
 		{
 			VK_CHECK_RESULT(error);
 		}
+
+		auto commandBuffer = getFrameData().commandBuffer;
+		if (commandBuffer->getState() == CommandBufferState::Submitted)
+		{
+			commandBuffer->wait();
+		}
+		commandBuffer->reset();
+		VulkanContext::getDeletionQueue(acquireImageIndex).flush();
 	}
 
 	auto VulkanSwapChain::getComputeCmdBuffer() -> CommandBuffer *
@@ -423,8 +413,8 @@ namespace maple
 
 	auto VulkanSwapChain::getFrameData() -> FrameData &
 	{
-		MAPLE_ASSERT(currentBuffer < swapChainBufferCount, "buffer index is out of bounds");
-		return frames[currentBuffer];
+		MAPLE_ASSERT(acquireImageIndex < swapChainBufferCount, "buffer index is out of bounds");
+		return frames[acquireImageIndex];
 	}
 
 	auto VulkanSwapChain::onResize(uint32_t width, uint32_t height, bool forceResize /*= false*/, NativeWindow *windowHandle /*= nullptr*/) -> void

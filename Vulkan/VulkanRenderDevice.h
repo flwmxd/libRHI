@@ -33,7 +33,6 @@ namespace maple
 		auto drawIndexedIndirect(const CommandBuffer* commandBuffer, const StorageBuffer* indirectBuffer, uint64_t offset, uint32_t count, uint32_t stride) -> void override;
 		auto drawIndirect(const CommandBuffer* commandBuffer, const StorageBuffer* indirectBuffer, uint64_t offset, uint32_t count, uint32_t stride) -> void override;
 
-		auto bindDescriptorSetsInternal(Pipeline* pipeline, const CommandBuffer* commandBuffer, uint32_t dynamicOffset, const std::vector<std::shared_ptr<DescriptorSet>>& sets) -> void override;
 		auto bindDescriptorSets(Pipeline* pipeline, const CommandBuffer* commandBuffer, const std::vector<std::shared_ptr<DescriptorSet>>& descriptorSets) -> void override;
 		auto bindDescriptorSet(Pipeline* pipeline, const CommandBuffer* commandBuffer, int32_t index, const std::shared_ptr<DescriptorSet>& descriptorSet) -> void override;
 

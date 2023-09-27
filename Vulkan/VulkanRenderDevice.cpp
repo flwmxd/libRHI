@@ -203,20 +203,20 @@ namespace maple
 		vkCmdDrawIndexed(static_cast<const VulkanCommandBuffer *>(commandBuffer)->getCommandBuffer(), count, 1, start, vertexOffset, 0);
 	}
 
-	auto VulkanRenderDevice::bindDescriptorSetsInternal(Pipeline* pipeline, const CommandBuffer* commandBuffer, uint32_t dynamicOffset, const std::vector<std::shared_ptr<DescriptorSet>>& descriptorSets) -> void
+	auto VulkanRenderDevice::bindDescriptorSets(Pipeline* pipeline, const CommandBuffer* commandBuffer, const std::vector<std::shared_ptr<DescriptorSet>>& descriptorSets) -> void
 	{
 		PROFILE_FUNCTION();
 		uint32_t numDynamicDescriptorSets = 0;
 		uint32_t numDesciptorSets = 0;
-
+		std::vector<uint32_t> offsets;
 		for (auto& descriptorSet : descriptorSets)
 		{
 			if (descriptorSet)
 			{
 				auto vkDesSet = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
-				if (vkDesSet->isDynamic())
-					numDynamicDescriptorSets++;
-
+				if (vkDesSet->isDynamic()) {
+					offsets.emplace_back(vkDesSet->getDynamicOffset());
+				}
 				descriptorSetPool[numDesciptorSets] = vkDesSet->getDescriptorSet();
 				numDesciptorSets++;
 			}
@@ -225,34 +225,7 @@ namespace maple
 		vkCmdBindDescriptorSets(
 			static_cast<const VulkanCommandBuffer*>(commandBuffer)->getCommandBuffer(),
 			static_cast<const VulkanPipeline*>(pipeline)->getPipelineBindPoint(),
-			static_cast<const VulkanPipeline*>(pipeline)->getPipelineLayout(), 0, numDesciptorSets, descriptorSetPool, numDynamicDescriptorSets, 0);
-	}
-
-	auto VulkanRenderDevice::bindDescriptorSets(Pipeline* pipeline, const CommandBuffer* commandBuffer, const std::vector<std::shared_ptr<DescriptorSet>>& descriptorSets) -> void
-	{
-		PROFILE_FUNCTION();
-		uint32_t numDynamicDescriptorSets = 0;
-
-		int32_t i = 0;
-		for (auto& descriptorSet : descriptorSets)
-		{
-			if (descriptorSet)
-			{
-				auto vkDesSet = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
-				if (vkDesSet->isDynamic())
-				{
-					numDynamicDescriptorSets++;
-				}
-
-				auto set = vkDesSet->getDescriptorSet();
-
-				vkCmdBindDescriptorSets(
-					static_cast<const VulkanCommandBuffer*>(commandBuffer)->getCommandBuffer(),
-					static_cast<const VulkanPipeline*>(pipeline)->getPipelineBindPoint(),
-					static_cast<const VulkanPipeline*>(pipeline)->getPipelineLayout(), i, 1, &set, 0, 0);
-			}
-			i++;
-		}
+			static_cast<const VulkanPipeline*>(pipeline)->getPipelineLayout(), 0, numDesciptorSets, descriptorSetPool, offsets.size(), offsets.data());
 	}
 
 	auto VulkanRenderDevice::bindDescriptorSet(Pipeline* pipeline, const CommandBuffer* commandBuffer, int32_t index, const std::shared_ptr<DescriptorSet>& descriptorSet) -> void

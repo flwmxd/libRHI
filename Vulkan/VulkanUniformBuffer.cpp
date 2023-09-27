@@ -25,11 +25,11 @@ namespace maple
 		VulkanBuffer::init(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, size, data);
 	}
 
-	auto VulkanUniformBuffer::setDynamicData(uint32_t size, uint32_t typeSize, const void *data) -> void
+	auto VulkanUniformBuffer::setDynamicData(uint32_t size, const void *data, uint32_t offset) -> void
 	{
 		PROFILE_FUNCTION();
 		VulkanBuffer::map();
-		memcpy(mapped, data, size);
+		memcpy((uint8_t*)(mapped)+offset, data, size);
 		VulkanBuffer::flush(size);
 		VulkanBuffer::unmap();
 	}

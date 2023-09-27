@@ -15,7 +15,7 @@ namespace maple
 		~VulkanUniformBuffer();
 
 		auto init(uint32_t size, const void *data) -> void override;
-		auto setDynamicData(uint32_t size, uint32_t typeSize, const void *data) -> void override;
+		auto setDynamicData(uint32_t size, const void *data, uint32_t offset) -> void override;
 		auto setData(uint32_t size, const void *data) -> void override;
 
 		inline auto setData(const void *data) -> void override

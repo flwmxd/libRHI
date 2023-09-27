@@ -23,7 +23,8 @@ namespace maple
 		VulkanDescriptorSet(const DescriptorInfo &info);
 		VulkanDescriptorSet(const LayoutBings &desc);
 		~VulkanDescriptorSet();
-		auto update(const CommandBuffer *commandBuffer, const ImageMemoryBarrier &barrier = {}) -> void override;
+		auto update(const CommandBuffer *commandBuffer) -> void override;
+		auto initUpdate() ->void override;
 
 		inline auto setDynamicOffset(uint32_t offset) -> void override
 		{
@@ -45,9 +46,9 @@ namespace maple
 		auto setTexture(const std::string &name, const std::shared_ptr<Texture> &textures, int32_t mipLevel = -1, bool forceRefreshCache = false) -> void override;
 		auto setBuffer(const std::string &name, const std::shared_ptr<UniformBuffer> &buffer) -> void override;
 		auto getUnifromBuffer(const std::string &name) -> std::shared_ptr<UniformBuffer> override;
-		auto setUniform(const std::string &bufferName, const std::string &uniformName, const void *data, bool dynamic) -> void override;
-		auto setUniform(const std::string &bufferName, const std::string &uniformName, const void *data, uint32_t size, bool dynamic) -> void override;
-		auto setUniformBufferData(const std::string &bufferName, const void *data, bool dynamic = false) -> void override;
+		auto setUniform(const std::string &bufferName, const void *data) -> void override;
+		auto setUniform(const std::string &bufferName, const std::string &uniformName, const void *data) -> void override;
+		auto setUniform(const std::string &bufferName, const std::string &uniformName, const void *data, uint32_t size) -> void override;
 
 		auto setStorageBuffer(const std::string &name, std::shared_ptr<StorageBuffer> buffer) -> void override;
 		auto setStorageBuffer(const std::string &name, std::shared_ptr<VertexBuffer> buffer) -> void override;
@@ -90,6 +91,7 @@ namespace maple
 			Buffer                        localStorage;
 			bool                          dynamic        = false;
 			bool                          hasUpdated[10] = {};
+			uint32_t offset = 0;
 		};
 
 		std::vector<VkDescriptorSet>                                                 descriptorSet;
