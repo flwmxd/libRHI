@@ -367,7 +367,6 @@ namespace maple
 		FrameBuffer *framebuffer = nullptr;
 		transitionAttachments();
 
-		// if (depthBiasEnabled)
 		vkCmdSetDepthBias(static_cast<const VulkanCommandBuffer *>(cmdBuffer)->getCommandBuffer(), depthBiasConstant, 0.0f, depthBiasSlope);
 
 		if(description.swapChainTarget) {
@@ -375,9 +374,15 @@ namespace maple
 		} else {
 			framebuffer = framebuffers[0].get();
 		}
-		if(!cmdBuffer->isSecondary())
-			renderPass->beginRenderPass(cmdBuffer, (float *)&description.clearColor, framebuffer, SubPassContents::Inline, getWidth(), getHeight(),
-			                            (int32_t *)&viewport);
+
+		if (!cmdBuffer->isSecondary())
+			renderPass->beginRenderPass(cmdBuffer, (float *)&description.clearColor, framebuffer, SubPassContents::Inline, getWidth(), getHeight(), (int32_t *)&viewport);
+
+		if (viewport.x >= 0)
+			cmdBuffer->updateViewport(viewport.x, viewport.y, viewport.z, viewport.w);
+		else
+			cmdBuffer->updateViewport(getWidth(), getHeight());
+
 		vkCmdBindPipeline(static_cast<const VulkanCommandBuffer *>(cmdBuffer)->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 		return framebuffer;
 	}

@@ -25,6 +25,7 @@ namespace maple
 
 		auto cmdBeginLabel(const std::string &caption) -> void
 		{
+			PROFILE_FUNCTION();
 			auto index = maple::GraphicsContext::get()->getSwapChain()->getCurrentBufferIndex();
 
 			if(lastIndex != index) 
@@ -63,6 +64,7 @@ namespace maple
 
 		auto cmdEndLabel() -> void
 		{
+			PROFILE_FUNCTION();
 			if(beginFunc == nullptr) return;
 
 			auto cmdBuffer = maple::GraphicsContext::get()->getSwapChain()->getCurrentCommandBuffer();

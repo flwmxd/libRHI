@@ -34,9 +34,9 @@ namespace maple
 		static constexpr bool StandardValidationLayer = false;
 		static constexpr bool AssistanceLayer = false;
 #ifdef _DEBUG
-		static constexpr bool EnableValidationLayers = false;
-#else
 		static constexpr bool EnableValidationLayers = true;
+#else
+		static constexpr bool EnableValidationLayers = false;
 #endif
 	};
 }        // namespace maple

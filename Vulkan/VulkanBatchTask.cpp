@@ -48,7 +48,6 @@ namespace maple
 				buildInfo.scratchData.deviceAddress = scratchBuffer->getDeviceAddress();
 
 				vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &buildRanges);
-
 				vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &memoryBarrier, 0, 0, 0, 0);
 			}
 		}
