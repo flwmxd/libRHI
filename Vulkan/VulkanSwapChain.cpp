@@ -54,7 +54,7 @@ namespace maple
 	{
 		PROFILE_FUNCTION();
 		this->vsync = vsync;
-
+		nativeWin = window;
 		if (surface == VK_NULL_HANDLE)
 			surface = createPlatformSurface(window);
 
@@ -324,8 +324,17 @@ namespace maple
 			{
 				LOGI("Acquire Image result : {0}", result == VK_ERROR_OUT_OF_DATE_KHR ? "Out of Date" : "SubOptimal");
 
-				if (result == VK_ERROR_OUT_OF_DATE_KHR)
-					onResize(width, height);
+				if (result == VK_ERROR_OUT_OF_DATE_KHR) 
+				{
+					int32_t width = 0, height = 0;
+					glfwGetFramebufferSize((GLFWwindow*)nativeWin, &width, &height);
+					while (width == 0 || height == 0) {
+						glfwGetFramebufferSize((GLFWwindow*)nativeWin, &width, &height);
+						glfwWaitEvents();
+					}
+					vkDeviceWaitIdle(*VulkanDevice::get());
+					onResize(width, height, true);
+				}
 				return;
 			}
 			else if (result != VK_SUCCESS)

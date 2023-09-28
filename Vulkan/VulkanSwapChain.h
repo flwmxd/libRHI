@@ -119,5 +119,7 @@ namespace maple
 		VkSemaphore graphicsSemaphore = nullptr;
 
 		VkSemaphore presentSemaphore = VK_NULL_HANDLE;
+
+		void* nativeWin = nullptr;
 	};
 };        // namespace maple
