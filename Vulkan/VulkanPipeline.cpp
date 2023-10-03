@@ -165,10 +165,13 @@ namespace maple
 				blendAttachState[i].alphaBlendOp = VK_BLEND_OP_ADD;
 				blendAttachState[i].colorBlendOp = VK_BLEND_OP_ADD;
 				blendAttachState[i].blendEnable = info.transparencyEnabled;
-				blendAttachState[i].srcAlphaBlendFactor = convertBlend(info.blendMode);
-				blendAttachState[i].dstAlphaBlendFactor = convertBlend(info.dstBlendMode);
-				blendAttachState[i].srcColorBlendFactor = convertBlend(info.blendMode);
-				blendAttachState[i].dstColorBlendFactor = convertBlend(info.dstBlendMode);
+				if (info.transparencyEnabled) 
+				{
+					blendAttachState[i].srcAlphaBlendFactor = convertBlend(info.blendMode);
+					blendAttachState[i].dstAlphaBlendFactor = convertBlend(info.dstBlendMode);
+					blendAttachState[i].srcColorBlendFactor = convertBlend(info.blendMode);
+					blendAttachState[i].dstColorBlendFactor = convertBlend(info.dstBlendMode);
+				}
 			}
 
 			cb.attachmentCount = static_cast<uint32_t>(blendAttachState.size());
@@ -520,7 +523,7 @@ namespace maple
 		std::vector<std::shared_ptr<Texture>> textures;
 
 		if(description.swapChainTarget) {
-			textures.emplace_back(GraphicsContext::get()->getSwapChain()->getImage(0));
+			textures.emplace_back(GraphicsContext::get()->getSwapChain()->getCurrentImage());
 		} else {
 			for(auto texture : description.colorTargets) {
 				if(texture) { textures.emplace_back(texture); }

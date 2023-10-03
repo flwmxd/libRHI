@@ -98,6 +98,17 @@ namespace maple
 #endif
 	}
 
+	auto Shader::create(const std::vector<uint32_t>& compData, const VariableArraySize& size /*= {}*/) ->std::shared_ptr<Shader>
+	{
+#ifdef MAPLE_VULKAN
+		return std::make_shared<VulkanShader>(compData, size);
+#endif
+
+#ifdef MAPLE_OPENGL
+		return io::emplace<GLShader>(compData, size);
+#endif
+	}
+
 	auto Shader::create(const std::vector<uint32_t> &vertData, const std::vector<uint32_t> &fragData,
 	                    const std::unordered_set<std::string> &dynamicUniforms) -> std::shared_ptr<Shader>
 	{

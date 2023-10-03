@@ -249,6 +249,13 @@ namespace maple
 		createPipelineLayout();
 	}
 
+	VulkanShader::VulkanShader(const std::vector<uint32_t>& compData, const VariableArraySize& size) : arraySize(size)
+	{
+		shaderStages.resize(1);
+		loadShader(compData, ShaderType::Compute, 0);
+		createPipelineLayout();
+	}
+
 	VulkanShader::~VulkanShader()
 	{
 		unload();
