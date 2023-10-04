@@ -34,5 +34,7 @@ namespace maple
 		{
 			return nullptr;
 		};
+
+		virtual auto getNativeWin() -> void* { return nullptr; };
 	};
 }        // namespace maple

@@ -15,6 +15,7 @@
 
 #include <imgui.h>
 #include <imgui_impl_vulkan.h>
+#include <imgui_impl_glfw.h>
 
 namespace maple
 {
@@ -84,6 +85,7 @@ namespace maple
 		init_info.MinImageCount = 2;
 		init_info.ImageCount    = (uint32_t) vkSwapChain->getSwapChainBufferCount();
 		ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
+		ImGui_ImplGlfw_InitForVulkan((GLFWwindow*)vkSwapChain->getNativeWin(), true);
 		// Upload Fonts
 		{
 			rebuildFontTexture();
@@ -111,12 +113,18 @@ namespace maple
 	auto VKImGuiRenderer::newFrame() -> void
 	{
 		PROFILE_FUNCTION();
+		ImGuiIO& io = ImGui::GetIO();
+		io.DisplaySize = ImVec2(g_WindowData.Width, g_WindowData.Height);
 		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 	}
 
 	auto VKImGuiRenderer::render(const std::function<void()>& userCallback) -> void
 	{
+		ImGui::EndFrame();
+		ImGui::Render();
+
 		PROFILE_FUNCTION();
 		auto commandBuffer = VulkanContext::get()->getSwapChain()->getCurrentCommandBuffer();
 		g_WindowData.FrameIndex = VulkanContext::get()->getSwapChain()->getCurrentImageIndex();

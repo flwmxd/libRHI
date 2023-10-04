@@ -91,6 +91,8 @@ namespace maple
 
 		auto getComputeCmdBuffer() -> CommandBuffer * override;
 
+		auto getNativeWin() -> void* override { return nativeWin; }
+
 	  private:
 		auto createFrameData() -> void;
 		auto createComputeData() -> void;
