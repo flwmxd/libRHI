@@ -25,7 +25,7 @@ namespace maple
 
 		auto cmdBeginLabel(const std::string &caption) -> void
 		{
-			PROFILE_FUNCTION();
+				PROFILE_FUNCTION();
 			auto index = maple::GraphicsContext::get()->getSwapChain()->getCurrentBufferIndex();
 
 			if(lastIndex != index) 
@@ -40,6 +40,9 @@ namespace maple
 			{
 				beginFunc = (PFN_vkCmdDebugMarkerBeginEXT)vkGetDeviceProcAddr(*VulkanDevice::get(), "vkCmdDebugMarkerBeginEXT");
 				endFunc = (PFN_vkCmdDebugMarkerEndEXT)vkGetDeviceProcAddr(*VulkanDevice::get(), "vkCmdDebugMarkerEndEXT");
+
+				if (beginFunc == nullptr) return;
+
 				std::random_device rd;
 				std::mt19937 mt(rd());
 				std::uniform_real_distribution<float> dist(0.0, 1.0);
@@ -49,8 +52,6 @@ namespace maple
 					colors[i][3] = 1;
 				}
 			}
-
-			if(beginFunc == nullptr) return;
 
 			auto cmdBuffer = maple::GraphicsContext::get()->getSwapChain()->getCurrentCommandBuffer();
 			auto vkCmd = static_cast<VulkanCommandBuffer *>(cmdBuffer);
