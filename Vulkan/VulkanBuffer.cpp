@@ -102,13 +102,15 @@ namespace maple
 #endif
 		if (vmaUsage == VMA_MEMORY_USAGE_GPU_ONLY)
 		{
-			auto stagingBuffer = std::make_unique<VulkanBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, size, data);
-
-			auto         cmd = VulkanHelper::beginSingleTimeCommands();
-			VkBufferCopy copy = {};
-			copy.size         = size;
-			vkCmdCopyBuffer(cmd, stagingBuffer->getVkBuffer(), getVkBuffer(), 1, &copy);
-			VulkanHelper::endSingleTimeCommands(cmd);
+			if (data != nullptr) 
+			{
+				auto stagingBuffer = std::make_unique<VulkanBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, size, data);
+				auto         cmd = VulkanHelper::beginSingleTimeCommands();
+				VkBufferCopy copy = {};
+				copy.size = size;
+				vkCmdCopyBuffer(cmd, stagingBuffer->getVkBuffer(), getVkBuffer(), 1, &copy);
+				VulkanHelper::endSingleTimeCommands(cmd);
+			}
 		}
 		else
 		{

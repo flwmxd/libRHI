@@ -20,7 +20,9 @@ namespace maple
 
 		static auto createTopLevel(const uint32_t maxInstanceCount) -> Ptr;
 
-		static auto createBottomLevel(const VertexBuffer::Ptr &vertexBuffer, const IndexBuffer::Ptr &indexBuffer, uint32_t vertexCount, BatchTask::Ptr tasks) -> Ptr;
+		static auto createBottomLevel(const VertexBuffer::Ptr &vertexBuffer, const IndexBuffer::Ptr &indexBuffer, uint32_t vertexCount, uint32_t vertexStride, BatchTask::Ptr tasks) -> Ptr;
+
+		static auto createBottomLevel(const VertexBuffer * vertexBuffer, const IndexBuffer* indexBuffer, uint32_t vertexCount, uint32_t vertexStride, BatchTask::Ptr tasks)->Ptr;
 
 		virtual auto getBuildScratchSize() const -> uint64_t = 0;
 

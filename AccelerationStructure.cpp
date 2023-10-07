@@ -26,10 +26,19 @@ namespace maple
 #endif        // MAPLE_VULKAN
 	}
 
-	auto AccelerationStructure::createBottomLevel(const VertexBuffer::Ptr &vertexBuffer, const IndexBuffer::Ptr &indexBuffer, uint32_t vertexCount, BatchTask::Ptr batchTask) -> Ptr
+	auto AccelerationStructure::createBottomLevel(const VertexBuffer::Ptr &vertexBuffer, const IndexBuffer::Ptr &indexBuffer, uint32_t vertexCount, uint32_t vertexStride, BatchTask::Ptr batchTask) -> Ptr
 	{
 #ifdef MAPLE_VULKAN
-		return std::make_shared<VulkanAccelerationStructure>(vertexBuffer->getAddress(), indexBuffer->getAddress(), vertexCount, indexBuffer->getCount(), batchTask);
+		return std::make_shared<VulkanAccelerationStructure>(vertexBuffer->getAddress(), indexBuffer->getAddress(), vertexCount, indexBuffer->getCount(), vertexStride, batchTask);
+#else
+		return std::make_shared<NullAccelerationStructure>();
+#endif
+	}
+
+	auto AccelerationStructure::createBottomLevel(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, uint32_t vertexCount, uint32_t vertexStride, BatchTask::Ptr batchTask) ->Ptr
+	{
+#ifdef MAPLE_VULKAN
+		return std::make_shared<VulkanAccelerationStructure>(vertexBuffer->getAddress(), indexBuffer->getAddress(), vertexCount, indexBuffer->getCount(), vertexStride, batchTask);
 #else
 		return std::make_shared<NullAccelerationStructure>();
 #endif

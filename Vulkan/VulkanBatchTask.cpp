@@ -4,19 +4,22 @@
 #include "VulkanBatchTask.h"
 #include "Raytracing/VulkanAccelerationStructure.h"
 #include "VulkanBuffer.h"
+#include "VulkanCommandBuffer.h"
+#include "VulkanDebug.h"
 #include <cmath>
 
 namespace maple
 {
 #ifdef MAPLE_VULKAN
-	auto VulkanBatchTask::execute() -> void
+	auto VulkanBatchTask::execute(const CommandBuffer* cmd) -> void
 	{
-		auto cmd = VulkanHelper::beginSingleTimeCommands();
+		auto vkCmd = static_cast<const VulkanCommandBuffer*>(cmd);
 
 		std::shared_ptr<VulkanBuffer> scratchBuffer;
 
 		if (requests.size() > 0)
 		{
+			debug_utils::cmdBeginLabel("Build AccelerationStructure");
 			VkMemoryBarrier memoryBarrier;
 			memoryBarrier.sType         = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
 			memoryBarrier.pNext         = nullptr;
@@ -34,6 +37,7 @@ namespace maple
 
 			for (auto &request : requests)
 			{
+
 				const VkAccelerationStructureBuildRangeInfoKHR *buildRanges = &request.buildRanges[0];
 
 				VkAccelerationStructureBuildGeometryInfoKHR buildInfo{};
@@ -47,12 +51,12 @@ namespace maple
 				buildInfo.pGeometries               = request.geometries.data();
 				buildInfo.scratchData.deviceAddress = scratchBuffer->getDeviceAddress();
 
-				vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &buildRanges);
-				vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &memoryBarrier, 0, 0, 0, 0);
+				vkCmdBuildAccelerationStructuresKHR(vkCmd->getCommandBuffer(), 1, &buildInfo, &buildRanges);
+				vkCmdPipelineBarrier(vkCmd->getCommandBuffer(), VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &memoryBarrier, 0, 0, 0, 0);
 			}
+			debug_utils::cmdEndLabel();
+			requests.clear();
 		}
-
-		VulkanHelper::endSingleTimeCommands(cmd);
 	}
 
 	auto VulkanBatchTask::buildBlas(VulkanAccelerationStructure *                               accelerationStructure,

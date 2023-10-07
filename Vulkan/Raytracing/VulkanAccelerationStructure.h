@@ -31,7 +31,7 @@ namespace maple
 		};
 
 		VulkanAccelerationStructure(const uint32_t maxInstanceCount);
-		VulkanAccelerationStructure(uint64_t vertexAddress, uint64_t indexAddress, uint32_t vertexCount, uint32_t indexCount, std::shared_ptr<BatchTask> batch, bool opaque = false);
+		VulkanAccelerationStructure(uint64_t vertexAddress, uint64_t indexAddress, uint32_t vertexCount, uint32_t indexCount, uint32_t vertexStride, std::shared_ptr<BatchTask> batch, bool opaque = false);
 
 		virtual ~VulkanAccelerationStructure();
 

@@ -49,7 +49,7 @@ namespace maple
 	}
 
 	VulkanAccelerationStructure::VulkanAccelerationStructure(uint64_t vertexAddress, uint64_t indexAddress,
-	                                                         uint32_t vertexCount, uint32_t indexCount,
+	                                                         uint32_t vertexCount, uint32_t indexCount, uint32_t vertexStride, 
 	                                                         std::shared_ptr<BatchTask> batch, bool opaque)
 	{
 		std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRanges;
@@ -72,11 +72,11 @@ namespace maple
 			geometry.geometry.triangles.sType                    = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
 			geometry.geometry.triangles.pNext                    = nullptr;
 			geometry.geometry.triangles.vertexData.deviceAddress = vertexAddress;
-			//geometry.geometry.triangles.vertexStride             = sizeof(maple::Vertex);
+			geometry.geometry.triangles.vertexStride             = vertexStride;
 			geometry.geometry.triangles.maxVertex                = vertexCount;
 			geometry.geometry.triangles.vertexFormat             = VK_FORMAT_R32G32B32_SFLOAT;
 			geometry.geometry.triangles.indexData.deviceAddress  = indexAddress;
-			geometry.geometry.triangles.indexType                = VK_INDEX_TYPE_UINT32;
+			geometry.geometry.triangles.indexType                = VK_INDEX_TYPE_UINT16;
 			geometry.flags                                       = geometryFlags;
 
 			geometries.push_back(geometry);

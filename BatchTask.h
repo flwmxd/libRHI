@@ -6,11 +6,12 @@
 
 namespace maple
 {
+	class CommandBuffer;
 	class BatchTask
 	{
 	  public:
 		using Ptr = std::shared_ptr<BatchTask>;
-		virtual auto execute() -> void = 0;
-		static auto  create() -> Ptr;
+		virtual auto execute(const CommandBuffer* cmd) -> void = 0;
+		static auto  create()->Ptr;
 	};
 };        // namespace maple

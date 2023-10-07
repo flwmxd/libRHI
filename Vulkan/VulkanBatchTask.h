@@ -11,7 +11,7 @@ namespace maple
 	class VulkanBatchTask : public BatchTask
 	{
 	  public:
-		virtual auto execute() -> void override;
+		virtual auto execute(const CommandBuffer * cmd) -> void override;
 
 		auto buildBlas(VulkanAccelerationStructure *                               accelerationStructure,
 		               const std::vector<VkAccelerationStructureGeometryKHR> &     geometries,
