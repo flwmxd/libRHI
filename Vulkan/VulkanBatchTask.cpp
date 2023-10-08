@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////	/////////////////////////////////////
 // This file is part of the Maple Engine                              		//
 //////////////////////////////////////////////////////////////////////////////
 #include "VulkanBatchTask.h"
@@ -15,11 +15,10 @@ namespace maple
 	{
 		auto vkCmd = static_cast<const VulkanCommandBuffer*>(cmd);
 
-		std::shared_ptr<VulkanBuffer> scratchBuffer;
-
 		if (requests.size() > 0)
 		{
-			debug_utils::cmdBeginLabel("Build AccelerationStructure");
+			std::shared_ptr<VulkanBuffer> scratchBuffer;
+			debug_utils::cmdBeginLabel("Build Bottom AccelerationStructure");
 			VkMemoryBarrier memoryBarrier;
 			memoryBarrier.sType         = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
 			memoryBarrier.pNext         = nullptr;

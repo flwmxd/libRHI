@@ -7,6 +7,7 @@
 #include "../VulkanBatchTask.h"
 #include "../VulkanCommandBuffer.h"
 #include "../VulkanDevice.h"
+#include "../VulkanDebug.h"
 #include "RayTracingProperties.h"
 
 namespace maple
@@ -134,7 +135,7 @@ namespace maple
 		vkASInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 		vkASInstance.accelerationStructureReference = instanceAddress;
 		//auto trans                                          = glm::transpose(transform);
-		//std::memcpy(&vkASInstance.transform, &trans, sizeof(vkASInstance.transform));
+		std::memcpy(&vkASInstance.transform, &transform, sizeof(vkASInstance.transform));
 
 		return instanceId * sizeof(VkAccelerationStructureInstanceKHR);
 	}
@@ -241,9 +242,7 @@ namespace maple
 	{
 		if (instanceBufferHost != nullptr && instanceBufferDevice != nullptr && instanceSize > 0)
 		{
-
 			VkBufferCopy copyRegion{};
-
 			copyRegion.srcOffset = offset;
 			copyRegion.dstOffset = offset;
 			copyRegion.size = sizeof(VkAccelerationStructureInstanceKHR) * instanceSize;
@@ -256,8 +255,10 @@ namespace maple
 
 	auto VulkanAccelerationStructure::build(const CommandBuffer* cmd, uint32_t instanceSize, uint32_t instanceOffset) -> void
 	{
-		if (instanceBufferDevice)
+		if (instanceBufferDevice && instanceSize > 0)
 		{
+			debug_utils::cmdBeginLabel("Build TopLevel AccelerationStructure");
+
 			if (instanceBufferDevice->getMapped() != nullptr)
 			{
 				instanceBufferDevice->unmap();
@@ -312,6 +313,8 @@ namespace maple
 			}
 
 			built = true;
+
+			debug_utils::cmdEndLabel();
 		}
 	}
 #endif
