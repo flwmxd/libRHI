@@ -181,6 +181,10 @@ namespace maple
 		virtual auto setStorageBuffer(const std::string& name, const std::vector<std::shared_ptr<StorageBuffer>>& buffer) -> void = 0;
 		virtual auto setStorageBuffer(const std::string& name, const std::vector<std::shared_ptr<VertexBuffer>>& buffer) -> void = 0;
 		virtual auto setStorageBuffer(const std::string& name, const std::vector<std::shared_ptr<IndexBuffer>>& buffer) -> void = 0;
+
+		virtual auto setStorageBuffer(const std::string& name, const std::vector<VertexBuffer*> &buffer) -> void = 0;
+		virtual auto setStorageBuffer(const std::string& name, const std::vector<IndexBuffer*>  &buffer) -> void = 0;
+
 		virtual auto setUniform(const std::string& bufferName, const std::string& uniformName, const void* data) -> void = 0;
 		virtual auto setUniform(const std::string& bufferName, const std::string& uniformName, const void* data, uint32_t size) -> void = 0;
 		virtual auto setUniform(const std::string& bufferName, const void* data) -> void = 0;

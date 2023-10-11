@@ -21,6 +21,7 @@ namespace maple
 	{
 	public:
 		VulkanShader(const std::string& path, const VariableArraySize& size);
+		VulkanShader(const ShaderTypes& path, const VariableArraySize& size);
 		VulkanShader(const std::vector<uint32_t>& compData, const VariableArraySize& size);
 		VulkanShader(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData, const std::unordered_set<std::string>& dynamicUniforms);
 		~VulkanShader();
@@ -103,7 +104,7 @@ namespace maple
 
 	private:
 		auto loadShader(const std::vector<uint32_t>& spvCode, ShaderType type, int32_t currentShaderStage) -> void;
-		auto init() -> void;
+		auto init(const ShaderTypes& path = {}) -> void;
 		auto createPipelineLayout() -> void;
 		auto unload() const -> void;
 

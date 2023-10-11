@@ -17,9 +17,26 @@
 
 #include "Tweakable.h"
 
-namespace maple 
+namespace maple
 {
-	std::vector<std::vector<TweakValue*>> TweakValue::values;
+	static std::vector<std::vector<TweakValue*>>* values = nullptr;
+	
+	auto add(TweakValue* tweak) -> void
+	{
+		if (values == nullptr) 
+		{
+			values = new std::vector<std::vector<TweakValue*>>();
+		}
+
+		if (values->size() == 0)
+		{
+			values->resize((uint32_t)TweakType::LENGTH);
+		}
+		(*values)[(uint32_t)tweak->getType()].push_back(tweak);
+	};
+
+	auto getValues() ->std::vector<std::vector<TweakValue*>>&
+	{
+		return *values;
+	}
 }
-
-

@@ -9,7 +9,7 @@
 #include "VulkanDevice.h"
 #include "VulkanPipeline.h"
 #include <spirv_cross/spirv_cross.hpp>
-
+#include <fstream>
 
 namespace maple
 {
@@ -226,6 +226,25 @@ namespace maple
 			}
 		}
 
+		inline auto fileExists(const std::string& file) 
+		{
+			struct stat fileInfo;
+			return (!stat(file.c_str(), &fileInfo)) != 0;
+		}
+
+		inline auto read(const std::string& name) -> std::unique_ptr<std::vector<uint8_t>>
+		{
+			if (fileExists(name))
+			{
+				std::ifstream fileReader(name, std::ios::ate | std::ios::binary);
+				auto          fileSize = fileReader.tellg();
+				auto          buffer = std::make_unique<std::vector<uint8_t>>(fileSize);
+				fileReader.seekg(0);
+				fileReader.read(reinterpret_cast<char*>(buffer->data()), fileSize);
+				return buffer;
+			}
+			return nullptr;
+		}
 	}        // namespace
 
 	VulkanShader::VulkanShader(const std::string& path, const VariableArraySize& size) :
@@ -256,6 +275,11 @@ namespace maple
 		createPipelineLayout();
 	}
 
+	VulkanShader::VulkanShader(const ShaderTypes& types, const VariableArraySize& size) : arraySize(size)
+	{
+		init(types);
+	}
+
 	VulkanShader::~VulkanShader()
 	{
 		unload();
@@ -281,15 +305,25 @@ namespace maple
 		}
 	}
 
-	auto VulkanShader::init() -> void
+	auto VulkanShader::init(const ShaderTypes& path) -> void
 	{
 		PROFILE_FUNCTION();
 		uint32_t currentShaderStage = 0;
-
-		std::vector<std::string> lines;
-		StringUtils::split(source, "\n", lines);
 		std::unordered_multimap<ShaderType, std::string> sources;
-		parseSource(lines, sources);
+		
+		if (!path.empty()) 
+		{
+			for (auto & shaderType : path)
+			{
+				sources.emplace(shaderType.first, shaderType.second);
+			}
+		}
+		else 
+		{
+			std::vector<std::string> lines;
+			StringUtils::split(source, "\n", lines);
+			parseSource(lines, sources);
+		}
 
 		for (auto& source : sources)
 		{
@@ -322,15 +356,17 @@ namespace maple
 			}
 			else
 			{
-				/*auto buffer = File::read(source.second);
+				auto buffer = read(source.second);
 				auto size = buffer->size() / sizeof(uint32_t);
-				loadShader({ reinterpret_cast<uint32_t*>(buffer->data()), reinterpret_cast<uint32_t*>(buffer->data()) + size }, source.first, currentShaderStage);*/
+				loadShader({ reinterpret_cast<uint32_t*>(buffer->data()), 
+					reinterpret_cast<uint32_t*>(buffer->data()) + size }, 
+					source.first,
+					currentShaderStage);
 			}
 			auto out = StringUtils::split(source.second, ".");
 			shaderGroups.emplace(out[0], shaderStages[currentShaderStage]);
 			currentShaderStage++;
 		}
-
 		createPipelineLayout();
 	}
 

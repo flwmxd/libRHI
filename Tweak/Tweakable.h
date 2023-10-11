@@ -25,14 +25,7 @@ namespace maple
 {
 	enum class TweakType
 	{
-		TweakInt8,
-		TweakUInt8,
-		TweakInt16,
-		TweakUInt16,
 		TweakInt32,
-		TweakUInt32,
-		TweakInt64,
-		TweakUInt64,
 		TweakBool,
 		TweakFloat,
 		TweakDouble,
@@ -45,20 +38,13 @@ namespace maple
 		inline auto getType() const {
 			return varType;
 		}
-
-		static auto add(TweakValue* tweak)
-		{
-			if (values.size() == 0)
-			{
-				values.resize((uint32_t)TweakType::LENGTH);
-			}
-			values[(uint32_t)tweak->getType()].emplace_back(tweak);
-		}
-
 		TweakType varType;
-		static std::vector<std::vector<TweakValue*>> values;
 	};
 
+	extern auto add(TweakValue* tweak) -> void;
+	extern auto getValues() ->std::vector<std::vector<TweakValue*>>&;
+
+	
 
 #define TWEEKCLASS(name, type)																\
 	class name : public TweakValue                                                          \
@@ -67,24 +53,19 @@ namespace maple
 		const char* varName;				                                                \
 		type var, lowerBound, upperBound, step;												\
 																							\
-		name(const char* strName, const type& nLower = type{}, const type& nUpper= type{}, const type& step = type{})						\
-		: varName(strName),	lowerBound(nLower), upperBound(nUpper), step(step)			\
+		name(const char* strName, const type& var = type{} ,const type& nLower = type{}, const type& nUpper= type{}, const type& step = type{})						\
+		: varName(strName),	lowerBound(nLower), upperBound(nUpper), step(step), var(var)	\
 																							\
 		{																					\
-			TweakValue::add(this);															\
+			add(this);																		\
 			varType = TweakType::name;														\
 		}																					\
+		inline operator auto() const { return var; }										\
 	}
 	
-	TWEEKCLASS(TweakInt8	, int8_t);
-	TWEEKCLASS(TweakUInt8	, uint8_t);
-	TWEEKCLASS(TweakInt16	, int16_t);
-	TWEEKCLASS(TweakUInt16	, uint16_t);
 	TWEEKCLASS(TweakInt32	, int32_t);
-	TWEEKCLASS(TweakUInt32	, uint32_t);
-	TWEEKCLASS(TweakInt64	, int64_t);
-	TWEEKCLASS(TweakUInt64	, uint64_t);
 	TWEEKCLASS(TweakBool	, bool);
 	TWEEKCLASS(TweakFloat	, float);
 	TWEEKCLASS(TweakDouble	, double);
 }
+

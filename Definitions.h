@@ -14,12 +14,12 @@
 namespace maple
 {
 	struct vec4 { float x, y, z, w; };
-	struct vec3 { float x, y, z, w; };
-	struct vec2 { float x, y, z, w; };
+	struct vec3 { float x, y, z; };
+	struct vec2 { float x, y; };
 
 	struct ivec4 { int32_t x, y, z, w; };
-	struct ivec3 { int32_t x, y, z, w; };
-	struct ivec2 { int32_t x, y, z, w; };
+	struct ivec3 { int32_t x, y, z; };
+	struct ivec2 { int32_t x, y; };
 
 	struct mat4 { maple::vec4 col[4]; };
 

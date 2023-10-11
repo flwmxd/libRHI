@@ -119,7 +119,7 @@ namespace maple
 		}
 	}
 
-	auto VulkanAccelerationStructure::updateTLAS(const mat4& transform, uint32_t instanceId, uint64_t instanceAddress) -> uint64_t
+	auto VulkanAccelerationStructure::updateTLAS(const mat4& transform, uint32_t instanceId, uint32_t customInstanceId, uint64_t instanceAddress) -> uint64_t
 	{
 		VkAccelerationStructureInstanceKHR* geometryBuffer = (VkAccelerationStructureInstanceKHR*)instanceBufferHost->getMapped();
 		if (geometryBuffer == nullptr)
@@ -129,7 +129,7 @@ namespace maple
 
 		VkAccelerationStructureInstanceKHR& vkASInstance = geometryBuffer[instanceId];
 
-		vkASInstance.instanceCustomIndex = instanceId;
+		vkASInstance.instanceCustomIndex = customInstanceId;
 		vkASInstance.mask = 0xFF;
 		vkASInstance.instanceShaderBindingTableRecordOffset = 0;
 		vkASInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;

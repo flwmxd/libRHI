@@ -36,7 +36,6 @@ namespace maple
 
 			for (auto &request : requests)
 			{
-
 				const VkAccelerationStructureBuildRangeInfoKHR *buildRanges = &request.buildRanges[0];
 
 				VkAccelerationStructureBuildGeometryInfoKHR buildInfo{};

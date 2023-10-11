@@ -111,13 +111,13 @@ namespace maple
 			descriptorSetAllocateInfo.pNext = &variableInfo;
 		}
 
-		shader		= info.shader;
+		shader = info.shader;
 		descriptors = shader->getDescriptorInfo(info.layoutIndex);
 		uniformBuffers.resize(framesInFlight);
 
 		for (auto& descriptor : descriptors)
 		{
-			if (descriptor.type == DescriptorType::UniformBufferDynamic) 
+			if (descriptor.type == DescriptorType::UniformBufferDynamic)
 			{
 				dynamic = true;
 
@@ -267,7 +267,7 @@ namespace maple
 						}
 					}
 				}
-				else if (imageInfo.type == DescriptorType::UniformBufferDynamic) 
+				else if (imageInfo.type == DescriptorType::UniformBufferDynamic)
 				{
 					auto buffer = std::static_pointer_cast<VulkanUniformBuffer>(uniformBuffers[currentFrame][imageInfo.name]);
 
@@ -293,7 +293,7 @@ namespace maple
 
 					bufferInfoPool[index].buffer = buffer->getVkBuffer();
 					bufferInfoPool[index].offset = imageInfo.offset;
-					bufferInfoPool[index].range =  imageInfo.size;
+					bufferInfoPool[index].range = imageInfo.size;
 
 					VkWriteDescriptorSet writeDescriptorSet{};
 					writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -320,6 +320,16 @@ namespace maple
 						bufferInfoPool[index + i].range = imageInfo.size;
 						i++;
 					}
+
+					auto& buffers2 = ssbos2[imageInfo.name];
+					for (auto& ssbo : buffers2)
+					{
+						bufferInfoPool[index + i].buffer = (VkBuffer)ssbo->handle();
+						bufferInfoPool[index + i].offset = imageInfo.offset;
+						bufferInfoPool[index + i].range = imageInfo.size;
+						i++;
+					}
+
 
 					VkWriteDescriptorSet writeDescriptorSet{};
 					writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -368,7 +378,7 @@ namespace maple
 		int32_t index = 0;
 		uint32_t descriptorWritesCount = 0;
 
-		for (auto currentFrame = 0; currentFrame <framesInFlight; currentFrame++)
+		for (auto currentFrame = 0; currentFrame < framesInFlight; currentFrame++)
 		{
 			for (auto& imageInfo : descriptors)
 			{
@@ -433,6 +443,17 @@ namespace maple
 					int32_t i = 0;
 
 					for (auto& ssbo : buffers)
+					{
+						bufferInfoPool[index + i].buffer = (VkBuffer)ssbo->handle();
+						bufferInfoPool[index + i].offset = imageInfo.offset;
+						bufferInfoPool[index + i].range = imageInfo.size;
+						i++;
+					}
+
+
+					auto& buffers2 = ssbos2[imageInfo.name];
+
+					for (auto& ssbo : buffers2)
 					{
 						bufferInfoPool[index + i].buffer = (VkBuffer)ssbo->handle();
 						bufferInfoPool[index + i].offset = imageInfo.offset;
@@ -529,11 +550,11 @@ namespace maple
 
 	auto VulkanDescriptorSet::setBuffer(const std::string& name, const std::shared_ptr<UniformBuffer>& buffer) -> void
 	{
-		for (auto & uniform : uniformBuffers)
+		for (auto& uniform : uniformBuffers)
 		{
-			for (auto & pair : uniform)
+			for (auto& pair : uniform)
 			{
-				if (pair.first == name) 
+				if (pair.first == name)
 				{
 					pair.second = buffer;
 				}
@@ -656,6 +677,24 @@ namespace maple
 		for (auto& buffer : buffers)
 		{
 			ssbos[name].emplace_back(buffer);
+		}
+	}
+
+	auto VulkanDescriptorSet::setStorageBuffer(const std::string& name, const std::vector<VertexBuffer*>& buffers) -> void
+	{
+		ssbos2[name].clear();
+		for (auto& buffer : buffers)
+		{
+			ssbos2[name].emplace_back(buffer);
+		}
+	}
+
+	auto VulkanDescriptorSet::setStorageBuffer(const std::string& name, const std::vector<IndexBuffer*>& buffers) -> void 
+	{
+		ssbos2[name].clear();
+		for (auto& buffer : buffers)
+		{
+			ssbos2[name].emplace_back(buffer);
 		}
 	}
 
