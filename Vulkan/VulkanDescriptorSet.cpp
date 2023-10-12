@@ -669,6 +669,9 @@ namespace maple
 		{
 			ssbos[name].emplace_back(buffer);
 		}
+		descriptorDirty[0] = true;
+		descriptorDirty[1] = true;
+		descriptorDirty[2] = true;
 	}
 
 	auto VulkanDescriptorSet::setStorageBuffer(const std::string& name, const std::vector<std::shared_ptr<VertexBuffer>>& buffers) -> void
@@ -678,6 +681,9 @@ namespace maple
 		{
 			ssbos[name].emplace_back(buffer);
 		}
+		descriptorDirty[0] = true;
+		descriptorDirty[1] = true;
+		descriptorDirty[2] = true;
 	}
 
 	auto VulkanDescriptorSet::setStorageBuffer(const std::string& name, const std::vector<VertexBuffer*>& buffers) -> void
@@ -687,6 +693,9 @@ namespace maple
 		{
 			ssbos2[name].emplace_back(buffer);
 		}
+		descriptorDirty[0] = true;
+		descriptorDirty[1] = true;
+		descriptorDirty[2] = true;
 	}
 
 	auto VulkanDescriptorSet::setStorageBuffer(const std::string& name, const std::vector<IndexBuffer*>& buffers) -> void 
@@ -696,6 +705,9 @@ namespace maple
 		{
 			ssbos2[name].emplace_back(buffer);
 		}
+		descriptorDirty[0] = true;
+		descriptorDirty[1] = true;
+		descriptorDirty[2] = true;
 	}
 
 	auto VulkanDescriptorSet::setAccelerationStructure(const std::string& name, const std::shared_ptr<AccelerationStructure>& structure) -> void

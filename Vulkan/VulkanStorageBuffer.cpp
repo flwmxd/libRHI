@@ -21,15 +21,7 @@ namespace maple
 		}
 
 		lastAccessFlagBits = accessFlagBits;
-		if (data == nullptr)
-		{
-			std::vector<uint8_t> newData(size,0);
-			vulkanBuffer = std::make_shared<VulkanBuffer>(flags, size, newData.data(), options.vmaUsage, options.vmaCreateFlags);
-		}
-		else
-		{
-			vulkanBuffer = std::make_shared<VulkanBuffer>(flags, size, data, options.vmaUsage, options.vmaCreateFlags);
-		}
+		vulkanBuffer = std::make_shared<VulkanBuffer>(flags, size, nullptr, options.vmaUsage, options.vmaCreateFlags);
 	}
 
 	VulkanStorageBuffer::VulkanStorageBuffer(const BufferOptions &options) :
