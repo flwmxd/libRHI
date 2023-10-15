@@ -177,16 +177,16 @@ namespace maple
 		PROFILE_FUNCTION();
 		VkViewport viewport = {};
 
-		viewport.x = x;
+		/*viewport.x = x;
 		viewport.y = (float)height - y;
 		viewport.width = (float)width;
-		viewport.height = -(float)height;
+		viewport.height = -(float)height;*/
 
 
-	/*	viewport.x = x >= 0 ? (float)x : 0;
+		viewport.x = x >= 0 ? (float)x : 0;
 		viewport.y = y >= 0 ? (float)y : 0;
 		viewport.width = static_cast<float>(width);
-		viewport.height = static_cast<float>(height);*/
+		viewport.height = static_cast<float>(height);
 
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;

@@ -6,18 +6,28 @@
 #include "VulkanBuffer.h"
 #include "VulkanCommandBuffer.h"
 #include "VulkanDebug.h"
+#include "VulkanContext.h"
+#include "VulkanDevice.h"
 #include <cmath>
 
 namespace maple
 {
 #ifdef MAPLE_VULKAN
+
+	static inline size_t align(size_t x, size_t alignment)
+	{
+		return (x + (alignment - 1)) & ~(alignment - 1);
+	}
+
 	auto VulkanBatchTask::execute(const CommandBuffer* cmd) -> void
 	{
 		auto vkCmd = static_cast<const VulkanCommandBuffer*>(cmd);
 
+		auto alignment = VulkanDevice::get()->getPhysicalDevice()->getAccelerationStructureProperties().minAccelerationStructureScratchOffsetAlignment;
+
 		if (requests.size() > 0)
 		{
-			std::shared_ptr<VulkanBuffer> scratchBuffer;
+			//std::shared_ptr<VulkanBuffer> scratchBuffer;
 			debug_utils::cmdBeginLabel("Build Bottom AccelerationStructure");
 			VkMemoryBarrier memoryBarrier;
 			memoryBarrier.sType         = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
@@ -28,11 +38,20 @@ namespace maple
 			VkDeviceSize scratchBufferSize = 0;
 
 			for (auto &request : requests)
-				scratchBufferSize = std::max(scratchBufferSize, request.accelerationStructure->getBuildSizes().buildScratchSize);
+				scratchBufferSize += align(request.accelerationStructure->getBuildScratchSize(),request.accelerationStructure->getBuildSizes().buildScratchSize);
 
-			scratchBuffer = std::make_shared<VulkanBuffer>(
-			    VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			    scratchBufferSize, nullptr, VMA_MEMORY_USAGE_GPU_ONLY, 0);
+			if (scratchBuffer == nullptr) 
+			{
+				scratchBuffer = std::make_shared<VulkanBuffer>(
+					VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+					scratchBufferSize, nullptr, VMA_MEMORY_USAGE_GPU_ONLY, 0);
+			}
+			else if(scratchBuffer->getSize() < scratchBufferSize)
+			{
+				scratchBuffer->resize(scratchBufferSize,nullptr);
+			}
+
+			
 
 			for (auto &request : requests)
 			{
@@ -47,7 +66,10 @@ namespace maple
 				buildInfo.dstAccelerationStructure  = request.accelerationStructure->getAccelerationStructure();
 				buildInfo.geometryCount             = (uint32_t) request.geometries.size();
 				buildInfo.pGeometries               = request.geometries.data();
-				buildInfo.scratchData.deviceAddress = scratchBuffer->getDeviceAddress();
+				buildInfo.scratchData.deviceAddress = scratchBuffer->getDeviceAddress() 
+					+ align(request.accelerationStructure->getBuildScratchSize(), request.accelerationStructure->getBuildSizes().buildScratchSize);;
+					//request.accelerationStructure->getDeviceAddress();
+					//scratchBuffer->getDeviceAddress();
 
 				vkCmdBuildAccelerationStructuresKHR(vkCmd->getCommandBuffer(), 1, &buildInfo, &buildRanges);
 				vkCmdPipelineBarrier(vkCmd->getCommandBuffer(), VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &memoryBarrier, 0, 0, 0, 0);

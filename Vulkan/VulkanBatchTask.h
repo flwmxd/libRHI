@@ -26,5 +26,7 @@ namespace maple
 		};
 
 		std::vector<BLASBuildRequest> requests;
+
+		std::shared_ptr<VulkanBuffer> scratchBuffer;
 	};
 };        // namespace maple

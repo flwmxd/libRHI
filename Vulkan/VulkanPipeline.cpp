@@ -139,9 +139,8 @@ namespace maple
 			// TODO there is a bug here.
 			// because vulkan Y axis is up to down and different with opengl
 			// http://anki3d.org/vulkan-coordinate-system/
-			rs.frontFace =
-			    VK_FRONT_FACE_COUNTER_CLOCKWISE; ////info.flipY && info.swapChainTarget ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE;
-
+			rs.frontFace = VK_FRONT_FACE_CLOCKWISE;
+			    //VK_FRONT_FACE_COUNTER_CLOCKWISE; ////info.flipY && info.swapChainTarget ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE;
 			rs.depthClampEnable = VK_FALSE;
 			rs.rasterizerDiscardEnable = VK_FALSE;
 			rs.depthBiasEnable = (info.depthBiasEnabled ? VK_TRUE : VK_FALSE);

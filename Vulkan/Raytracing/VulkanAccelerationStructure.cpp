@@ -155,7 +155,8 @@ namespace maple
 			&buildSizesInfo);
 
 		buffer = std::make_shared<VulkanBuffer>(
-			VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+			VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR 
+			| VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT ,
 			buildSizesInfo.accelerationStructureSize, nullptr, VMA_MEMORY_USAGE_GPU_ONLY, 0);
 
 		auto createInfo = desc.createInfo;
