@@ -36,6 +36,8 @@ namespace maple
 		virtual auto presentInternal(const CommandBuffer* commandBuffer) -> void {};
 
 		virtual auto dispatch(const CommandBuffer* commandBuffer, uint32_t x, uint32_t y, uint32_t z) -> void {};
+		virtual auto dispatch(const CommandBuffer* commandBuffer, uint32_t x, uint32_t y, uint32_t z, Pipeline* pipeline, const void* pushConsts, const std::vector<std::shared_ptr<DescriptorSet>>& descriptorSets) -> void {};
+		
 		virtual auto drawInstanced(const CommandBuffer* commandBuffer, uint32_t verticesCount, uint32_t instanceCount, int32_t startInstance = 0, int32_t startVertex = 0) const -> void {};
 		virtual auto drawIndexedIndirect(const CommandBuffer* commandBuffer, const StorageBuffer* indirectBuffer, uint64_t offset, uint32_t count, uint32_t stride) -> void {};
 		virtual auto drawIndirect(const CommandBuffer* commandBuffer, const StorageBuffer* indirectBuffer, uint64_t offset, uint32_t count, uint32_t stride) -> void {};

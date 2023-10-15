@@ -38,7 +38,7 @@ namespace maple
 
 		auto clearRenderTarget(const std::shared_ptr<Texture>& texture, const CommandBuffer* commandBuffer, const vec4 & clearColor) -> void override;
 		auto clearRenderTarget(const std::shared_ptr<Texture>& texture, const CommandBuffer* commandBuffer, const uint32_t* clearColor) -> void override;
-
+		auto dispatch(const CommandBuffer* commandBuffer, uint32_t x, uint32_t y, uint32_t z, Pipeline* pipeline, const void* pushConsts, const std::vector<std::shared_ptr<DescriptorSet>>& descriptorSets) -> void override;
 		auto dispatch(const CommandBuffer* commandBuffer, uint32_t x, uint32_t y, uint32_t z) -> void override;
 		auto memoryBarrier(const CommandBuffer* commandBuffer, ShaderType fromStage, ShaderType toStage, AccessFlags from, AccessFlags to) -> void override;
 		auto imageBarrier(const CommandBuffer* commandBuffer, const ImageMemoryBarrier& barriers) -> void override;

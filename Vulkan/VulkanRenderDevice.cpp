@@ -318,6 +318,25 @@ namespace maple
 		vkCmdDispatch(((const VulkanCommandBuffer*)commandBuffer)->getCommandBuffer(), x, y, z);
 	}
 
+	auto VulkanRenderDevice::dispatch(const CommandBuffer* commandBuffer, uint32_t x, uint32_t y, uint32_t z, 
+		Pipeline* pipeline, const void* pushConsts, const std::vector<std::shared_ptr<DescriptorSet>>& descriptorSets) -> void
+	{
+		for (auto& set : descriptorSets)
+		{
+			set->update(commandBuffer);
+		}
+
+		pipeline->bind(commandBuffer);
+		if (pushConsts != nullptr)
+		{
+			pipeline->getShader()->getPushConstant(0)->setData(pushConsts);
+			pipeline->getShader()->bindPushConstants(commandBuffer, pipeline);
+		}
+		bindDescriptorSets(pipeline, commandBuffer, descriptorSets);
+		dispatch(commandBuffer, x, y, z);
+		pipeline->end(commandBuffer);
+	}
+
 	auto VulkanRenderDevice::memoryBarrier(const CommandBuffer* commandBuffer, uint32_t flag) -> void
 	{
 		PROFILE_FUNCTION();
