@@ -143,6 +143,13 @@ namespace maple
 		return defaultTexture;
 	}
 
+	auto Texture2D::getTexture1X1Black()->std::shared_ptr<Texture2D> 
+	{
+		static uint32_t color = 0;
+		static std::shared_ptr<Texture2D> defaultTexture = create(1, 1, &color);
+		return defaultTexture;
+	}
+
 	//###################################################
 
 	auto TextureDepth::create(uint32_t width, uint32_t height, bool stencil, const CommandBuffer* commandBuffer) -> std::shared_ptr<TextureDepth>

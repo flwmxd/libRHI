@@ -150,6 +150,7 @@ namespace maple
 	protected:
 		bool     computeShader = false;
 		bool     raytracingShader = false;
+		bool	 rayQuerySupport = false;
 		uint32_t localSizeX = 1;
 		uint32_t localSizeY = 1;
 		uint32_t localSizeZ = 1;

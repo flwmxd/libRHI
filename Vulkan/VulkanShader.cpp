@@ -459,6 +459,16 @@ namespace maple
 					setLayoutBinding.stageFlags = stageFlags;
 					//TODO ....
 					setLayoutBinding.stageFlags |= VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+					setLayoutBinding.stageFlags |= VK_SHADER_STAGE_COMPUTE_BIT;
+				}
+
+				if (rayQuerySupport) 
+				{
+					setLayoutBinding.stageFlags = stageFlags;
+					setLayoutBinding.stageFlags |= VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+					setLayoutBinding.stageFlags |= VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+					setLayoutBinding.stageFlags |= VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+					setLayoutBinding.stageFlags |= VK_SHADER_STAGE_MISS_BIT_KHR;
 				}
 
 				setLayoutBinding.binding = info.binding;
@@ -582,6 +592,15 @@ namespace maple
 			localSizeY = comp.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 1);
 			localSizeZ = comp.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 2);
 			//todo...reflect the image
+
+			for (auto & str : comp.get_declared_extensions())
+			{
+				if (str == "SPV_KHR_ray_query") 
+				{
+					rayQuerySupport = true;
+					break;
+				}
+			}
 		}
 
 		for (auto& resource : resources.storage_images)

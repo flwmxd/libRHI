@@ -114,6 +114,7 @@ namespace maple
 	public:
 		static auto  getDefaultTexture()->std::shared_ptr<Texture2D>;
 		static auto  getTexture1X1White()->std::shared_ptr<Texture2D>;
+		static auto  getTexture1X1Black()->std::shared_ptr<Texture2D>;
 		static auto  createRaw()->Texture2D*;
 
 		static auto  create()->std::shared_ptr<Texture2D>;
