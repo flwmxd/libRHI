@@ -13,9 +13,9 @@ namespace maple
 	  public:
 		virtual auto execute(const CommandBuffer * cmd) -> void override;
 
-		auto buildBlas(VulkanAccelerationStructure *                               accelerationStructure,
-		               const std::vector<VkAccelerationStructureGeometryKHR> &     geometries,
-		               const std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRanges) -> void;
+		auto buildBlas(VulkanAccelerationStructure* accelerationStructure,
+			const std::vector<VkAccelerationStructureGeometryKHR>& geometries,
+			const std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRanges) -> void;
 
 	  private:
 		struct BLASBuildRequest

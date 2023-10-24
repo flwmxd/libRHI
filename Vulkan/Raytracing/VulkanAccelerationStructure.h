@@ -73,6 +73,8 @@ namespace maple
 
 		auto copyToGPU(const CommandBuffer *cmd, uint32_t instanceSize, uint64_t offset) -> void override;
 
+		auto copyToGPU(const CommandBuffer* cmd, const std::vector<BuildRange>& ranges) -> void override;
+
 		auto build(const CommandBuffer *cmd, uint32_t instanceSize, uint32_t instanceOffset = 0) -> void override;
 
 		inline auto isBuilt() const -> bool override

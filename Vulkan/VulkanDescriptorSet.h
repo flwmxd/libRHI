@@ -9,8 +9,8 @@
 
 namespace maple
 {
-	constexpr int32_t MAX_BUFFER_INFOS      = 1024;
-	constexpr int32_t MAX_IMAGE_INFOS       = 1024;
+	constexpr int32_t MAX_BUFFER_INFOS      = 2048;
+	constexpr int32_t MAX_IMAGE_INFOS       = 2048;
 	constexpr int32_t MAX_WRITE_DESCTIPTORS = 32;
 
 	class StorageBuffer;

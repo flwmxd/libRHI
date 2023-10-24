@@ -20,6 +20,12 @@ namespace maple
 		int32_t numberOfVertex;
 	};
 
+	struct BuildRange 
+	{
+		int32_t count;
+		int32_t instanceOffset;
+	};
+
 	class  AccelerationStructure
 	{
 	  public:
@@ -42,6 +48,8 @@ namespace maple
 		virtual auto unmap() -> void = 0;
 
 		virtual auto copyToGPU(const CommandBuffer *cmd, uint32_t instanceSize, uint64_t offset) -> void = 0;
+
+		virtual auto copyToGPU(const CommandBuffer* cmd, const std::vector<BuildRange> & ranges) -> void = 0;
 
 		virtual auto build(const CommandBuffer *cmd, uint32_t instanceSize, uint32_t instanceOffset = 0) -> void = 0;
 
@@ -77,6 +85,8 @@ namespace maple
 
 		virtual auto copyToGPU(const CommandBuffer *cmd, uint32_t instanceSize, uint64_t offset) -> void
 		{}
+
+		virtual auto copyToGPU(const CommandBuffer* cmd, const std::vector<BuildRange>& ranges) -> void override {};
 
 		virtual auto build(const CommandBuffer *cmd, uint32_t instanceSize, uint32_t instanceOffset = 0) -> void{};
 

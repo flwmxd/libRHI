@@ -183,26 +183,40 @@ namespace maple
 		deleteSampler();
 	}
 
-	auto VulkanTexture2D::update(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const void *buffer, bool mipmap) -> void
+	auto VulkanTexture2D::update(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const void* buffer, bool mipmap) -> void
 	{
 		PROFILE_FUNCTION();
-		auto stagingBuffer = std::make_unique<VulkanBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, w * h * tools::getFormatSize(parameters.format), buffer);
+		auto stagingBuffer = std::make_shared<VulkanBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, w * h * tools::getFormatSize(parameters.format), buffer);
 		auto oldLayout = imageLayout;
 
-		GraphicsContext::get()->immediateSubmit([&](const CommandBuffer *oneTimeCmd) {
-			auto vkCmd = static_cast<const VulkanCommandBuffer *>(oneTimeCmd);
+		auto cmdBuffer = static_cast<const VulkanCommandBuffer*>(VulkanContext::get()->getSwapChain()->getCurrentCommandBuffer());
 
-			transitionImage(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, vkCmd);
-			VulkanHelper::copyBufferToImage(stagingBuffer->getVkBuffer(), textureImage, static_cast<uint32_t>(w), static_cast<uint32_t>(h), 1, x, y,
-			                                0, vkCmd);
-
-			if(loadOptions.generateMipMaps || mipmap) {
-				tools::generateMipmaps(textureImage, VkConverter::textureFormatToVK(parameters.format, false), width, height, 1, mipLevels, 1,
-				                       vkCmd->getCommandBuffer());
+		if (cmdBuffer->isRecording())
+		{
+			transitionImage(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, cmdBuffer);
+			VulkanHelper::copyBufferToImage(stagingBuffer->getVkBuffer(), textureImage, static_cast<uint32_t>(w), static_cast<uint32_t>(h), 1, x, y, 0, cmdBuffer);
+			if (loadOptions.generateMipMaps || mipmap) {
+				tools::generateMipmaps(textureImage, VkConverter::textureFormatToVK(parameters.format, false), width, height, 1, mipLevels, 1, cmdBuffer->getCommandBuffer());
 			}
+			transitionImage(oldLayout, cmdBuffer);
+		}
+		else 
+		{
+			GraphicsContext::get()->immediateSubmit([=](const CommandBuffer* oneTimeCmd) {
+				auto vkCmd = static_cast<const VulkanCommandBuffer*>(oneTimeCmd);
 
-			transitionImage(oldLayout, vkCmd);
-		});
+				transitionImage(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, vkCmd);
+				VulkanHelper::copyBufferToImage(stagingBuffer->getVkBuffer(), textureImage, static_cast<uint32_t>(w), static_cast<uint32_t>(h), 1, x, y,
+					0, vkCmd);
+
+				if (loadOptions.generateMipMaps || mipmap) {
+					tools::generateMipmaps(textureImage, VkConverter::textureFormatToVK(parameters.format, false), width, height, 1, mipLevels, 1,
+						vkCmd->getCommandBuffer());
+				}
+
+				transitionImage(oldLayout, vkCmd);
+			});
+		}
 	}
 
 	auto VulkanTexture2D::copyImage(const CommandBuffer *cmd, uint8_t *out) -> void
@@ -333,7 +347,8 @@ namespace maple
 
 		imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-		transitionImage(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		auto cmdBuffer = static_cast<const VulkanCommandBuffer*>(VulkanContext::get()->getSwapChain()->getCurrentCommandBuffer());
+		transitionImage(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, cmdBuffer->isRecording() ? cmdBuffer : nullptr);
 		updateDescriptor();
 
 		setName(name);

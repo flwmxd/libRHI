@@ -244,14 +244,36 @@ namespace maple
 		if (instanceBufferHost != nullptr && instanceBufferDevice != nullptr && instanceSize > 0)
 		{
 			VkBufferCopy copyRegion{};
-			copyRegion.srcOffset = offset;
-			copyRegion.dstOffset = offset;
-			copyRegion.size = sizeof(VkAccelerationStructureInstanceKHR) * instanceSize;
+			copyRegion.srcOffset = offset  * sizeof(VkAccelerationStructureInstanceKHR);
+			copyRegion.dstOffset = offset  * sizeof(VkAccelerationStructureInstanceKHR);
+			copyRegion.size = instanceSize * sizeof(VkAccelerationStructureInstanceKHR);
 
 			auto vkCmd = static_cast<const VulkanCommandBuffer*>(cmd);
 
 			vkCmdCopyBuffer(vkCmd->getCommandBuffer(), instanceBufferHost->getVkBuffer(), instanceBufferDevice->getVkBuffer(), 1, &copyRegion);
 		}
+	}
+
+	auto VulkanAccelerationStructure::copyToGPU(const CommandBuffer* cmd, const std::vector<BuildRange>& ranges) -> void
+	{
+		std::vector<VkBufferCopy> copies(ranges.size());
+		for (size_t i = 0; i < ranges.size(); i++)
+		{
+			VkBufferCopy & copyRegion = copies[i];
+			copyRegion.srcOffset = ranges[i].instanceOffset * sizeof(VkAccelerationStructureInstanceKHR);
+			copyRegion.dstOffset = ranges[i].instanceOffset * sizeof(VkAccelerationStructureInstanceKHR);
+			copyRegion.size = ranges[i].count * sizeof(VkAccelerationStructureInstanceKHR);
+		}
+
+		auto vkCmd = static_cast<const VulkanCommandBuffer*>(cmd);
+
+		vkCmdCopyBuffer(
+			vkCmd->getCommandBuffer(), 
+			instanceBufferHost->getVkBuffer(), 
+			instanceBufferDevice->getVkBuffer(), 
+			copies.size(), 
+			copies.data()
+		);
 	}
 
 	auto VulkanAccelerationStructure::build(const CommandBuffer* cmd, uint32_t instanceSize, uint32_t instanceOffset) -> void
