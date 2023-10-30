@@ -35,7 +35,6 @@ namespace maple
 		virtual auto dispatchIndirect(const CommandBuffer* cmdBuffer, const StorageBuffer* ssbo, uint64_t offset = 0) -> void {};
 		virtual auto getRenderPass()->std::shared_ptr<RenderPass> = 0;
 		virtual auto getFrameBuffer()->std::shared_ptr<FrameBuffer> = 0;
-
 		virtual auto drawIndexedIndirect(const CommandBuffer* cmdBuffer, const StorageBuffer* ssbo, uint32_t drawCount, uint32_t stride = 0, uint64_t offset = 0) -> void {};
 
 		virtual auto drawIndexed(const CommandBuffer* cmdBuffer,

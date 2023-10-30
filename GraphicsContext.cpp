@@ -253,6 +253,7 @@ namespace maple
 		hash::hashCode(hash, desc.depthTarget);
 		hash::hashCode(hash, desc.depthArrayTarget);
 		hash::hashCode(hash, desc.swapChainTarget);
+		hash::hashCode(hash, desc.faceId);
 		// hash::hashCode(hash, desc.groupCountX, desc.groupCountY, desc.groupCountZ);
 
 		if(desc.swapChainTarget) {

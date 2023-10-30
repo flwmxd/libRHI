@@ -186,6 +186,9 @@ namespace maple
 		};
 
 	public:
+
+		using Ptr = std::shared_ptr<TextureCube>;
+
 		static auto create(uint32_t size)->std::shared_ptr<TextureCube>;
 		static auto create(uint32_t size, TextureFormat format, int32_t numMips)->std::shared_ptr<TextureCube>;
 		static auto createFromFile(const std::string& filePath)->std::shared_ptr<TextureCube>;
@@ -193,6 +196,7 @@ namespace maple
 		static auto createFromVCross(const std::vector<std::string>& files, uint32_t mips, TextureParameters params, TextureLoadOptions loadOptions, InputFormat = InputFormat::VERTICAL_CROSS)->std::shared_ptr<TextureCube>;
 
 		virtual auto update(const CommandBuffer* commandBuffer, FrameBuffer* framebuffer, int32_t cubeIndex, int32_t mipmapLevel = 0) -> void = 0;
+		virtual auto update(const CommandBuffer* commandBuffer, std::shared_ptr<Texture2D> framebuffer, int32_t cubeIndex, int32_t mipmapLevel = 0) -> void = 0;
 
 		virtual auto generateMipmap(const CommandBuffer* commandBuffer) -> void = 0;
 		inline auto  getType() const -> TextureType override

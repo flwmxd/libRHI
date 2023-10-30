@@ -271,6 +271,6 @@ namespace maple
 		PROFILE_FUNCTION();
 		if (started)
 			vkCmdEndRenderPass(static_cast<const VulkanCommandBuffer*>(commandBuffer)->getCommandBuffer());
-		started = false;
+ 		started = false;
 	}
 };        // namespace maple

@@ -404,6 +404,7 @@ namespace maple
 		uint32_t    groupCountZ = 1;
 		uint32_t    maxRayRecursionDepth = 2;
 		std::string pipelineName;
+		int32_t		faceId = -1;
 	};
 
 	enum MemoryBarrierFlags : int32_t        //todo

@@ -312,7 +312,8 @@ namespace maple
 		auto updateDescriptor() -> void;
 		auto load(uint32_t mips) -> void;
 
-		auto update(const CommandBuffer *commandBuffer, FrameBuffer *framebuffer, int32_t cubeIndex, int32_t mipmapLevel = 0) -> void override;
+		auto update(const CommandBuffer* commandBuffer, FrameBuffer* framebuffer, int32_t cubeIndex, int32_t mipmapLevel = 0) -> void override;
+		auto update(const CommandBuffer* commandBuffer, std::shared_ptr<Texture2D> framebuffer, int32_t cubeIndex, int32_t mipmapLevel = 0) -> void override;
 
 		auto transitionImage(VkImageLayout newLayout, const VulkanCommandBuffer *commandBuffer = nullptr) -> void override;
 

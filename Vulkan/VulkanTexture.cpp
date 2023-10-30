@@ -889,7 +889,52 @@ namespace maple
 		transitionImage(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, cmd);
 	}
 
-	auto VulkanTextureCube::transitionImage(VkImageLayout newLayout, const VulkanCommandBuffer *commandBuffer /*= nullptr*/) -> void
+	auto VulkanTextureCube::update(const CommandBuffer* commandBuffer, std::shared_ptr<Texture2D> framebuffer, int32_t cubeIndex, int32_t mipmapLevel /*= 0*/) -> void
+	{
+		PROFILE_FUNCTION();
+		auto cmd = static_cast<const VulkanCommandBuffer*>(commandBuffer);
+
+		auto vkTexture = std::static_pointer_cast<VulkanTexture2D>(framebuffer);
+		auto colorImage = vkTexture->getImage();
+		auto oldLayout = vkTexture->getImageLayout();
+
+		assert(colorImage != nullptr);
+
+		// set itself as transfer-dst
+		transitionImage(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, cmd);
+		vkTexture->transitionImage(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, cmd);
+	
+		// Copy region for transfer from framebuffer to cube face
+		VkImageCopy copyRegion = {};
+
+		copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		copyRegion.srcSubresource.baseArrayLayer = 0;
+		copyRegion.srcSubresource.mipLevel = 0;
+		copyRegion.srcSubresource.layerCount = 1;
+		copyRegion.srcOffset = { 0, 0, 0 };
+
+		copyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		copyRegion.dstSubresource.baseArrayLayer = cubeIndex;
+		copyRegion.dstSubresource.mipLevel = mipmapLevel;
+		copyRegion.dstSubresource.layerCount = 1;
+		copyRegion.dstOffset = { 0, 0, 0 };
+
+		auto mipScale = std::pow(0.5, mipmapLevel);
+
+		copyRegion.extent.width = width * mipScale;
+		copyRegion.extent.height = height * mipScale;
+		copyRegion.extent.depth = 1;
+
+		// Put image copy into command buffer
+		vkCmdCopyImage(cmd->getCommandBuffer(), colorImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
+
+		// Transform framebuffer color attachment back
+		vkTexture->transitionImage(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, cmd);
+
+		transitionImage(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, cmd);
+	}
+
+	auto VulkanTextureCube::transitionImage(VkImageLayout newLayout, const VulkanCommandBuffer* commandBuffer /*= nullptr*/) -> void
 	{
 		PROFILE_FUNCTION();
 		if(newLayout != imageLayout) {
