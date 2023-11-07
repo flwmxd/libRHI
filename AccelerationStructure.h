@@ -41,6 +41,10 @@ namespace maple
 
 		virtual auto updateTLAS(const mat4 &transform, uint32_t instanceId, uint32_t customInstanceId, uint64_t instanceAddress) -> uint64_t = 0;
 
+		virtual auto resetTLAS(uint32_t instanceId) -> void = 0;
+		
+		virtual auto reset()->void = 0;
+
 		virtual auto getDeviceAddress() const -> uint64_t = 0;
 
 		virtual auto mapHost() -> void * = 0;
@@ -64,10 +68,14 @@ namespace maple
 			return 0;
 		}
 
+		virtual auto reset()->void override {};
+
 		virtual auto updateTLAS(const mat4 &transform, uint32_t instanceId, uint32_t customInstanceId, uint64_t instanceAddress) -> uint64_t
 		{
 			return 0;
 		}
+
+		virtual auto resetTLAS(uint32_t instanceId) -> void {}
 
 		virtual auto getDeviceAddress() const -> uint64_t
 		{

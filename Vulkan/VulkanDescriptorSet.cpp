@@ -324,7 +324,7 @@ namespace maple
 					auto& buffers2 = ssbos2[imageInfo.name];
 					for (auto& ssbo : buffers2)
 					{
-						bufferInfoPool[index + i].buffer = (VkBuffer)ssbo->handle();
+						bufferInfoPool[index + i].buffer =(VkBuffer)ssbo->handle();
 						bufferInfoPool[index + i].offset = imageInfo.offset;
 						bufferInfoPool[index + i].range = imageInfo.size;
 						i++;

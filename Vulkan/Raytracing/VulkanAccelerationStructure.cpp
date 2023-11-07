@@ -119,6 +119,17 @@ namespace maple
 		}
 	}
 
+	auto VulkanAccelerationStructure::reset() ->void
+	{
+		VkAccelerationStructureInstanceKHR* geometryBuffer = (VkAccelerationStructureInstanceKHR*)instanceBufferHost->getMapped();
+		if (geometryBuffer == nullptr)
+		{
+			geometryBuffer = (VkAccelerationStructureInstanceKHR*)mapHost();
+		}
+
+		memset(geometryBuffer, 0, sizeof(VkAccelerationStructureInstanceKHR) * 2048);
+	}
+
 	auto VulkanAccelerationStructure::updateTLAS(const mat4& transform, uint32_t instanceId, uint32_t customInstanceId, uint64_t instanceAddress) -> uint64_t
 	{
 		VkAccelerationStructureInstanceKHR* geometryBuffer = (VkAccelerationStructureInstanceKHR*)instanceBufferHost->getMapped();
@@ -138,6 +149,17 @@ namespace maple
 		std::memcpy(&vkASInstance.transform, &transform, sizeof(vkASInstance.transform));
 
 		return instanceId * sizeof(VkAccelerationStructureInstanceKHR);
+	}
+
+	auto VulkanAccelerationStructure::resetTLAS(uint32_t instanceId) -> void
+	{
+		VkAccelerationStructureInstanceKHR* geometryBuffer = (VkAccelerationStructureInstanceKHR*)instanceBufferHost->getMapped();
+		if (geometryBuffer == nullptr)
+		{
+			geometryBuffer = (VkAccelerationStructureInstanceKHR*)mapHost();
+		}
+		VkAccelerationStructureInstanceKHR& vkASInstance = geometryBuffer[instanceId];
+		memset(&vkASInstance, 0, sizeof(VkAccelerationStructureInstanceKHR));
 	}
 
 	auto VulkanAccelerationStructure::create(const Desc& desc) -> void
@@ -251,6 +273,21 @@ namespace maple
 			auto vkCmd = static_cast<const VulkanCommandBuffer*>(cmd);
 
 			vkCmdCopyBuffer(vkCmd->getCommandBuffer(), instanceBufferHost->getVkBuffer(), instanceBufferDevice->getVkBuffer(), 1, &copyRegion);
+
+			{
+				VkBufferMemoryBarrier memoryBarrier{};
+				memoryBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+				memoryBarrier.pNext = nullptr;
+				memoryBarrier.buffer = instanceBufferDevice->getVkBuffer();
+				memoryBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+				memoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+				memoryBarrier.size = instanceSize * sizeof(VkAccelerationStructureInstanceKHR);
+				memoryBarrier.offset = copyRegion.srcOffset;
+
+				vkCmdPipelineBarrier(vkCmd->getCommandBuffer(),
+					VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+					VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 1, &memoryBarrier, 0, nullptr);
+			}
 		}
 	}
 
@@ -274,6 +311,18 @@ namespace maple
 			copies.size(), 
 			copies.data()
 		);
+
+		{
+			VkBufferMemoryBarrier memoryBarrier{};
+			memoryBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+			memoryBarrier.pNext = nullptr;
+			memoryBarrier.buffer = instanceBufferDevice->getVkBuffer();
+			memoryBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+			memoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+			vkCmdPipelineBarrier(vkCmd->getCommandBuffer(), 
+				VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+				VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 1, &memoryBarrier, 0, nullptr);
+		}
 	}
 
 	auto VulkanAccelerationStructure::build(const CommandBuffer* cmd, uint32_t instanceSize, uint32_t instanceOffset) -> void
@@ -330,8 +379,8 @@ namespace maple
 				VkMemoryBarrier memoryBarrier;
 				memoryBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
 				memoryBarrier.pNext = nullptr;
-				memoryBarrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR | VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR;
-				memoryBarrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR | VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR;
+				memoryBarrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
+				memoryBarrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR;
 				vkCmdPipelineBarrier(vkCmd->getCommandBuffer(), VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &memoryBarrier, 0, 0, 0, 0);
 			}
 

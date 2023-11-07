@@ -60,12 +60,16 @@ namespace maple
 			return deviceAddress;
 		}
 
+		virtual auto reset()->void override ;
+
 		inline auto getFlags() const
 		{
 			return flags;
 		}
 
 		auto updateTLAS(const mat4 &transform, uint32_t instanceId, uint32_t customInstanceId, uint64_t instanceAddress) -> uint64_t override;
+
+		auto resetTLAS(uint32_t instanceId) -> void override;
 
 		auto mapHost() -> void * override;
 

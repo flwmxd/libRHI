@@ -140,6 +140,9 @@ namespace maple
 	class  Texture3D : public Texture2D
 	{
 	public:
+
+		using Ptr = std::shared_ptr<Texture3D>;
+
 		static auto create(uint32_t width, uint32_t height, uint32_t depth, TextureParameters parameters = {}, TextureLoadOptions loadOptions = {}, const void* data = nullptr)->std::shared_ptr<Texture3D>;
 
 		virtual auto update(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const void* buffer, bool mipmap) -> void override
