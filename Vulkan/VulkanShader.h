@@ -21,7 +21,7 @@ namespace maple
 	{
 	public:
 		VulkanShader(const std::string& path, const VariableArraySize& size);
-		VulkanShader(const ShaderTypes& path, const VariableArraySize& size);
+		VulkanShader(const ShaderTypes& path, const VariableArraySize& size, const std::unordered_set<std::string>& dynamicUniforms = {});
 		VulkanShader(const std::vector<uint32_t>& compData, const VariableArraySize& size);
 		VulkanShader(const std::vector<uint32_t>& vertData, const std::vector<uint32_t>& fragData, const std::unordered_set<std::string>& dynamicUniforms);
 		~VulkanShader();

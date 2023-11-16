@@ -57,8 +57,8 @@ namespace maple
 		std::shared_ptr<BatchTask> batch,
 		bool opaque)
 	{
-		std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRanges;
-		std::vector<VkAccelerationStructureGeometryKHR>       geometries;
+		//std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRanges;
+		//std::vector<VkAccelerationStructureGeometryKHR>       geometries;
 		std::vector<uint32_t>                                 maxPrimitiveCounts;
 
 		auto vkBatch = std::static_pointer_cast<VulkanBatchTask>(batch);
@@ -149,6 +149,12 @@ namespace maple
 		std::memcpy(&vkASInstance.transform, &transform, sizeof(vkASInstance.transform));
 
 		return instanceId * sizeof(VkAccelerationStructureInstanceKHR);
+	}
+
+	auto VulkanAccelerationStructure::updateBLAS(std::shared_ptr<BatchTask> batch) -> void
+	{
+		auto vkBatch = std::static_pointer_cast<VulkanBatchTask>(batch);
+		vkBatch->buildBlas(this, geometries, buildRanges);
 	}
 
 	auto VulkanAccelerationStructure::resetTLAS(uint32_t instanceId) -> void

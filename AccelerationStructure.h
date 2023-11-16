@@ -41,6 +41,8 @@ namespace maple
 
 		virtual auto updateTLAS(const mat4 &transform, uint32_t instanceId, uint32_t customInstanceId, uint64_t instanceAddress) -> uint64_t = 0;
 
+		virtual auto updateBLAS(std::shared_ptr<BatchTask> batch) -> void = 0;
+
 		virtual auto resetTLAS(uint32_t instanceId) -> void = 0;
 		
 		virtual auto reset()->void = 0;

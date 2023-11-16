@@ -374,13 +374,12 @@ namespace maple
 		VkPipelineStageFlags               dstStageMask = getStageFlags(toStage);
 		for (auto& barrier : barries)
 		{
-			auto                  ssbo = static_cast<VulkanStorageBuffer*>(barrier.ssbo);
 			VkBufferMemoryBarrier memoryBarrier = {};
 			memoryBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
 			memoryBarrier.srcAccessMask = toAccessFlag(barrier.from, srcStageMask);
 			memoryBarrier.dstAccessMask = toAccessFlag(barrier.to, dstStageMask);
 			memoryBarrier.size = VK_WHOLE_SIZE;        //barrier.size;
-			memoryBarrier.buffer = ssbo->getHandle();
+			memoryBarrier.buffer = (VkBuffer)barrier.ssbo->handle();
 			memoryBarrier.srcQueueFamilyIndex = *VulkanDevice::get()->getPhysicalDevice()->getQueueFamilyIndices().graphicsFamily;
 			memoryBarrier.dstQueueFamilyIndex = *VulkanDevice::get()->getPhysicalDevice()->getQueueFamilyIndices().graphicsFamily;
 			bufferBarriers.push_back(memoryBarrier);

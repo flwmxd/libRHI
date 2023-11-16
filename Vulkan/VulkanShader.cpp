@@ -275,7 +275,8 @@ namespace maple
 		createPipelineLayout();
 	}
 
-	VulkanShader::VulkanShader(const ShaderTypes& types, const VariableArraySize& size) : arraySize(size)
+	VulkanShader::VulkanShader(const ShaderTypes& types, const VariableArraySize& size, const std::unordered_set<std::string>& dynamicUniforms) 
+		: arraySize(size), dynamicUniforms(dynamicUniforms)
 	{
 		init(types);
 	}

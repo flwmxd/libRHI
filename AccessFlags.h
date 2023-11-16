@@ -9,7 +9,7 @@
 namespace maple
 {
 	class Texture;
-	class StorageBuffer;
+	class GPUBuffer;
 	enum class ShaderType : uint32_t;
 
 #ifndef BIT
@@ -36,7 +36,7 @@ namespace maple
 	{
 		AccessFlags    from;
 		AccessFlags    to;
-		StorageBuffer *ssbo;
+		GPUBuffer	   *ssbo;
 		uint32_t size = std::numeric_limits<uint32_t>::max();
 	};
 };        // namespace maple

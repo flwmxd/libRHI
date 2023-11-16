@@ -69,6 +69,8 @@ namespace maple
 
 		auto updateTLAS(const mat4 &transform, uint32_t instanceId, uint32_t customInstanceId, uint64_t instanceAddress) -> uint64_t override;
 
+		auto updateBLAS(std::shared_ptr<BatchTask> batch) -> void override;
+
 		auto resetTLAS(uint32_t instanceId) -> void override;
 
 		auto mapHost() -> void * override;
@@ -101,5 +103,8 @@ namespace maple
 		VulkanBuffer::Ptr instanceBufferHost;
 		VulkanBuffer::Ptr instanceBufferDevice;
 		VulkanBuffer::Ptr scratchBuffer;
+		//for bottom level..
+		std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRanges;
+		std::vector<VkAccelerationStructureGeometryKHR>       geometries;
 	};
 }        // namespace maple

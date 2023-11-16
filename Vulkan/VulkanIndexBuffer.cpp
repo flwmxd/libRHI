@@ -94,13 +94,27 @@ namespace maple
 	auto VulkanIndexBuffer::setData(const uint16_t* data, uint32_t count) -> void
 	{
 		PROFILE_FUNCTION();
-		setData(count * sizeof(uint16_t), data);
+		if (count > this->count)
+		{
+			resize(count * sizeof(uint16_t), data);
+		}
+		else
+		{
+			setData(count * sizeof(uint16_t), data);
+		}
 		this->count = count;
 	}
 
 	auto VulkanIndexBuffer::setData(const uint32_t* data, uint32_t count) -> void
 	{
-		setData(count * sizeof(uint32_t), data);
+		if (count > this->count) 
+		{
+			resize(count * sizeof(uint32_t), data);
+		}
+		else 
+		{
+			setData(count * sizeof(uint32_t), data);
+		}
 		this->count = count;
 	}
 };        // namespace maple
