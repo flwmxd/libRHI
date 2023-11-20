@@ -219,7 +219,7 @@ namespace maple
 		}
 	}
 
-	auto VulkanTexture2D::copyImage(const CommandBuffer *cmd, uint8_t *out) -> void
+	auto VulkanTexture2D::copyImage(const CommandBuffer* cmd, uint8_t* out, uint32_t mipLevel) -> void
 	{
 		PROFILE_FUNCTION();
 		if(cmd == nullptr) {
@@ -235,7 +235,7 @@ namespace maple
 				bufferImageCopy.bufferRowLength = 0;
 				bufferImageCopy.bufferImageHeight = 0;
 				bufferImageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				bufferImageCopy.imageSubresource.mipLevel = 0;
+				bufferImageCopy.imageSubresource.mipLevel = mipLevel;
 				bufferImageCopy.imageSubresource.baseArrayLayer = 0;
 				bufferImageCopy.imageSubresource.layerCount = 1;
 				bufferImageCopy.imageOffset.x = 0;

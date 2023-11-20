@@ -25,7 +25,7 @@ namespace maple
 		virtual auto getHeight() const->uint32_t = 0;
 		virtual auto getType() const->TextureType = 0;
 		virtual auto getFormat() const->TextureFormat = 0;
-		virtual auto copyImage(const CommandBuffer *comd, uint8_t *out) -> void{};
+		virtual auto copyImage(const CommandBuffer *comd, uint8_t *out ,uint32_t mipLevel) -> void{};
 		virtual auto memoryBarrier(const CommandBuffer* cmd, uint32_t flags) -> void;
 		// rwFlag 0 1 2 -> r w rw
 
@@ -120,7 +120,7 @@ namespace maple
 		static auto  create()->std::shared_ptr<Texture2D>;
 		static auto  create(uint32_t width, uint32_t height, void* data, TextureParameters parameters = TextureParameters(), TextureLoadOptions loadOptions = TextureLoadOptions())->std::shared_ptr<Texture2D>;
 		static auto  create(const std::string& name, const std::string& filePath, TextureParameters parameters = TextureParameters(), TextureLoadOptions loadOptions = TextureLoadOptions())->std::shared_ptr<Texture2D>;
-		virtual auto update(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const void *buffer, bool mipmap = false) -> void = 0;
+		virtual auto update(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const void* buffer, bool mipmap = false) -> void = 0;
 
 		virtual auto buildTexture(TextureFormat internalformat, uint32_t width, uint32_t height, bool srgb = false, bool depth = false, bool samplerShadow = false, bool mipmap = false, bool image = false, uint32_t accessFlag = 0) -> void = 0;
 		virtual auto buildPyramid(TextureFormat internalformat, uint32_t width, uint32_t height) -> void {};
